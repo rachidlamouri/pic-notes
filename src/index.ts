@@ -5,10 +5,35 @@ const debug = process.env.DEBUG !== undefined ? (message: string) => {
   console.log(message)
 } : () => {}
 
-function assertNotNull<T>(value: T) : asserts value is Exclude<T, null> {
+function assertIsNotNull<T>(value: T) : asserts value is Exclude<T, null> {
   if (value === null) {
     throw Error('Unexpected null value')
   }
+}
+
+function assertIsString(value: unknown): asserts value is string {
+  if (typeof value !== 'string') {
+    throw new Error('Unexpected non-string value')
+  }
+}
+
+function assertIsObject(value: unknown): asserts value is Record<string, unknown> {
+  const isObject = typeof value === 'object' && value !== null && !Array.isArray(value);
+
+  if (!isObject) {
+    throw Error('Unexpected non-object')
+  }
+}
+
+function assertIsArray(value: unknown): asserts value is unknown[] {
+  if (!Array.isArray(value)) {
+    throw Error('Unexpected non-array')
+  }
+}
+
+function assertIsStringArray(value: unknown): asserts value is string[] {
+  assertIsArray(value);
+  value.every(assertIsString);
 }
 
 class Timestamp {
@@ -113,7 +138,7 @@ class Picture {
     }
 
     const match = fileName.match(matchingRegex);
-    assertNotNull(match);
+    assertIsNotNull(match);
     const [_, year, month, day, hour, minute, second] = match;
     const timestamp = new Timestamp(year, month, day, hour, minute, second);
 
@@ -167,8 +192,37 @@ class PicturesManager {
   }
 }
 
+type MetaJson = {
+  id: string;
+  filePath: string;
+  tagSet: string[];
+}
+
+type Meta = {
+  id: string;
+  filePath: string;
+  tagSet: Set<string>;
+}
+
+function assertIsMetaJson(value: unknown): asserts value is MetaJson {
+  assertIsObject(value);
+  assertIsString(value.id)
+  assertIsString(value.filePath)
+  assertIsStringArray(value.tagSet);
+}
+
+type Metadata = {
+  metaById: Record<string, Meta>,
+  idByFileName: Record<string, string>,
+  idSetByTag:Record<string, Set<string>>
+}
+
 class MetadataManager {
-  data: any
+  data: Metadata = {
+    metaById: {},
+    idByFileName: {},
+    idSetByTag: {}
+  };
 
   static FILE_PATH = '.metadata';
 
@@ -190,6 +244,7 @@ class MetadataManager {
     const guaranteedIdByFileName = Object.fromEntries(
       pictureList.map((pic) => {
         const guaranteedId = pic.fileName in data.idByFileName ? data.idByFileName[pic.fileName] : pic.id
+        assertIsString(guaranteedId)
         return [pic.fileName, guaranteedId];
       })
     );
@@ -211,7 +266,7 @@ class MetadataManager {
         guaranteedIdSetByTag[tag] = guaranteedIdSet
       })
 
-    const guaranteedData = {
+    const guaranteedData: Metadata = {
       metaById: guaranteedMetaById,
       idByFileName: guaranteedIdByFileName,
       idSetByTag: guaranteedIdSetByTag
@@ -224,21 +279,33 @@ class MetadataManager {
   read() {
     const text = fs.readFileSync(MetadataManager.FILE_PATH, 'utf8')
 
-    let data;
+    let data: unknown;
     try {
       data = JSON.parse(text);
     } catch {
-      data = {}
+      data = {
+        metaById: {},
+        idByFileName: {},
+        idSetByTag: {}
+      } satisfies Metadata
     }
 
+    assertIsObject(data);
+    assertIsObject(data.metaById);
+    assertIsObject(data.idByFileName);
+    assertIsObject(data.idSetByTag);
+
     const modifiedMetaById = Object.fromEntries(
-      Object.entries(data.metaById ?? {}).map(([id, meta]: [string, any]) => {
+      Object.entries(data.metaById ?? {}).map(([id, meta]) => {
+        assertIsMetaJson(meta);
         return [id, { ...meta, tagSet: new Set(meta.tagSet)}]
       })
     )
 
     const modifiedIdSetByTag = Object.fromEntries(
-      Object.entries(data.idSetByTag ?? {}).map(([tag, idList]: [string, any]) => {
+      Object.entries(data.idSetByTag ?? {}).map(([tag, idList]) => {
+        assertIsArray(idList);
+        idList.every(assertIsString)
         return [tag, new Set(idList)]
       })
     )
@@ -250,15 +317,15 @@ class MetadataManager {
     }
   }
 
-  write(data: any) {
+  write(data: Metadata) {
     const modifiedMetaById = Object.fromEntries(
-      Object.entries(data.metaById ?? {}).map(([id, meta]: [string, any]) => {
+      Object.entries(data.metaById ?? {}).map(([id, meta]) => {
         return [id, { ...meta, tagSet: [...meta.tagSet]}]
       })
     )
 
     const modifiedIdSetByTag = Object.fromEntries(
-      Object.entries(data.idSetByTag ?? {}).map(([tag, idSet]: [string, any]) => {
+      Object.entries(data.idSetByTag ?? {}).map(([tag, idSet]) => {
         return [tag, [...idSet]]
       })
     )
@@ -350,7 +417,7 @@ const parseInputId = (inputId: string) => {
   }
 
   const match = inputId.match(matchingConfig.regex)
-  assertNotNull(match);
+  assertIsNotNull(match);
   const timestamp = matchingConfig.parse(match);
 
   return timestamp.hash;
@@ -358,7 +425,7 @@ const parseInputId = (inputId: string) => {
 
 const DIVIDER = Array.from({ length: 40 }).fill('-').join('');
 
-const logMeta = (meta: any, includeDivider = false) => {
+const logMeta = (meta: Meta, includeDivider = false) => {
   console.log('Id   |', meta.id)
   console.log('File |', meta.filePath)
   console.log('Tags |', [...meta.tagSet].join(', '))
@@ -368,7 +435,7 @@ const logMeta = (meta: any, includeDivider = false) => {
   }
 }
 
-const logMetaList = (metaList: any[]) => {
+const logMetaList = (metaList: Meta[]) => {
   const sortedList = [...metaList].sort((metaA, metaB) => {
     if (metaA.filePath < metaB.filePath) {
       return 1
