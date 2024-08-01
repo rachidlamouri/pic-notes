@@ -34,6 +34,17 @@ class Timestamp {
     )
   }
 
+  static fromNow() {
+    const date = new Date();
+
+    return Timestamp.fromToday(
+      date.getHours().toString().padStart(2, '0'),
+      date.getMinutes().toString().padStart(2, '0'),
+      date.getSeconds().toString().padStart(2, '0'),
+      date,
+    )
+  }
+
   constructor(year, month, day, hour, minute, second) {
     this.year = year;
     this.month = month;
@@ -475,6 +486,20 @@ const validateStatus = (status, state) => {
     })
 
     logMetaList(metaList);
+    process.exit();
+  }
+
+  if (command === 'backup') {
+    const BACKUP_DIR = 'backup'
+    const timestamp = Timestamp.fromNow();
+    const destinationDirectoryName = posix.join(BACKUP_DIR, timestamp.formatted)
+
+    fs.mkdirSync(destinationDirectoryName)
+    fs.cpSync(PicturesManager.PICS_DIR, posix.join(destinationDirectoryName, PicturesManager.PICS_DIR), {recursive: true})
+    fs.cpSync(MetadataManager.FILE_PATH, posix.join(destinationDirectoryName, MetadataManager.FILE_PATH))
+
+    console.log('Backed up to: ' + destinationDirectoryName);
+
     process.exit();
   }
 
