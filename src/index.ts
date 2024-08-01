@@ -1,9 +1,15 @@
-const fs = require('fs')
-const { posix } = require('path')
+import fs from 'fs'
+import { posix } from 'path'
 
-const debug = process.env.DEBUG !== undefined ? (message) => {
+const debug = process.env.DEBUG !== undefined ? (message: string) => {
   console.log(message)
 } : () => {}
+
+function assertNotNull<T>(value: T) : asserts value is Exclude<T, null> {
+  if (value === null) {
+    throw Error('Unexpected null value')
+  }
+}
 
 class Timestamp {
   year
@@ -13,7 +19,7 @@ class Timestamp {
   minute
   second
 
-  static fromDay(day, hour, minute, second, date = new Date()) {
+  static fromDay(day: string, hour: string, minute: string, second: string, date = new Date()) {
     return new Timestamp(
       date.getFullYear().toString(),
       (date.getMonth() + 1).toString().padStart(2, '0'),
@@ -24,7 +30,7 @@ class Timestamp {
     );
   }
 
-  static fromToday(hour, minute, second, date = new Date()) {
+  static fromToday(hour: string, minute: string, second: string, date = new Date()) {
     return Timestamp.fromDay(
       date.getDate().toString().padStart(2, '0'),
       hour,
@@ -45,7 +51,7 @@ class Timestamp {
     )
   }
 
-  constructor(year, month, day, hour, minute, second) {
+  constructor(year: string, month: string, day: string, hour: string, minute: string, second: string) {
     this.year = year;
     this.month = month;
     this.day = day;
@@ -96,7 +102,7 @@ class Picture {
   static INPUT_FILE_NAME_REGEX = /^Screenshot (\d{4})-(\d{2})-(\d{2}) (\d{2})(\d{2})(\d{2})\.png$/
   static TRANSFORMED_FILE_NAME_REGEX = /^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})\.png$/
 
-  constructor (fileName, filePath) {
+  constructor (fileName: string, filePath: string) {
     const matchingRegex = [
       Picture.INPUT_FILE_NAME_REGEX,
       Picture.TRANSFORMED_FILE_NAME_REGEX,
@@ -107,6 +113,7 @@ class Picture {
     }
 
     const match = fileName.match(matchingRegex);
+    assertNotNull(match);
     const [_, year, month, day, hour, minute, second] = match;
     const timestamp = new Timestamp(year, month, day, hour, minute, second);
 
@@ -127,7 +134,7 @@ class Picture {
 }
 
 class PicturesManager {
-  pictureList = []
+  pictureList: Picture[] = []
 
   static PICS_DIR = './pics'
 
@@ -145,13 +152,13 @@ class PicturesManager {
 
   read() {
     debug('read');
-    return fs.readdirSync(PicturesManager.PICS_DIR).map((fileName) => {
+    return fs.readdirSync(PicturesManager.PICS_DIR).map((fileName: string) => {
       const filePath = './' + posix.join(PicturesManager.PICS_DIR, fileName);
       return new Picture(fileName, filePath)
     })
   }
 
-  transform(pictureList) {
+  transform(pictureList: Picture[]) {
     debug('transform');
     return pictureList.filter((picture) => !picture.isTransformed).forEach((picture) => {
       const transformedFilePath = './' + posix.join(PicturesManager.PICS_DIR, picture.transformedFileName);
@@ -161,11 +168,11 @@ class PicturesManager {
 }
 
 class MetadataManager {
-  data
+  data: any
 
   static FILE_PATH = '.metadata';
 
-  init(picsManager) {
+  init(picsManager: PicturesManager) {
     const pictureList = picsManager.pictureList
     let data = this.read();
 
@@ -187,7 +194,7 @@ class MetadataManager {
       })
     );
 
-    const guaranteedIdSetByTag = {};
+    const guaranteedIdSetByTag: Record<string, Set<string>> = {};
     pictureList
       .flatMap((pic) => {
         const meta = guaranteedMetaById[pic.id];
@@ -225,13 +232,13 @@ class MetadataManager {
     }
 
     const modifiedMetaById = Object.fromEntries(
-      Object.entries(data.metaById ?? {}).map(([id, meta]) => {
+      Object.entries(data.metaById ?? {}).map(([id, meta]: [string, any]) => {
         return [id, { ...meta, tagSet: new Set(meta.tagSet)}]
       })
     )
 
     const modifiedIdSetByTag = Object.fromEntries(
-      Object.entries(data.idSetByTag ?? {}).map(([tag, idList]) => {
+      Object.entries(data.idSetByTag ?? {}).map(([tag, idList]: [string, any]) => {
         return [tag, new Set(idList)]
       })
     )
@@ -243,15 +250,15 @@ class MetadataManager {
     }
   }
 
-  write(data) {
+  write(data: any) {
     const modifiedMetaById = Object.fromEntries(
-      Object.entries(data.metaById ?? {}).map(([id, meta]) => {
+      Object.entries(data.metaById ?? {}).map(([id, meta]: [string, any]) => {
         return [id, { ...meta, tagSet: [...meta.tagSet]}]
       })
     )
 
     const modifiedIdSetByTag = Object.fromEntries(
-      Object.entries(data.idSetByTag ?? {}).map(([tag, idSet]) => {
+      Object.entries(data.idSetByTag ?? {}).map(([tag, idSet]: [string, any]) => {
         return [tag, [...idSet]]
       })
     )
@@ -269,7 +276,7 @@ class MetadataManager {
   static SUCCESS = 0;
   static ERROR_ID_NOT_FOUND = 1;
 
-  addTags(id, tagList) {
+  addTags(id: string, tagList: string[]) {
     const meta = this.data.metaById[id];
 
     if (!meta) {
@@ -284,7 +291,7 @@ class MetadataManager {
     return MetadataManager.SUCCESS;
   }
 
-  removeTags(id, tagList) {
+  removeTags(id: string, tagList: string[]) {
     const meta = this.data.metaById[id];
 
     if (!meta) {
@@ -303,14 +310,14 @@ class MetadataManager {
 const picsManager = new PicturesManager();
 picsManager.init();
 
-const dataManager = new MetadataManager(picsManager.pictureList);
+const dataManager = new MetadataManager();
 dataManager.init(picsManager);
 
 const inputIdParserConfig = [
   {
     label: 'time',
     regex: /^(\d{2})(\d)-?(\d)(\d{2})$/,
-    parse: (match) => {
+    parse: (match: RegExpMatchArray) => {
       const hour =  match[1];
       const minute = match[2] + match[3];
       const second = match[4]
@@ -322,7 +329,7 @@ const inputIdParserConfig = [
   {
     label: 'day and time',
     regex: /^(\d{2}):(\d{2})(\d)-?(\d)(\d{2})$/,
-    parse: (match) => {
+    parse: (match: RegExpMatchArray) => {
       const day = match[1]
       const hour =  match[2];
       const minute = match[3] + match[4];
@@ -334,7 +341,7 @@ const inputIdParserConfig = [
   }
 ]
 
-const parseInputId = (inputId) => {
+const parseInputId = (inputId: string) => {
   const matchingConfig = inputIdParserConfig.find((config) => config.regex.test(inputId));
 
   if (matchingConfig === undefined) {
@@ -343,6 +350,7 @@ const parseInputId = (inputId) => {
   }
 
   const match = inputId.match(matchingConfig.regex)
+  assertNotNull(match);
   const timestamp = matchingConfig.parse(match);
 
   return timestamp.hash;
@@ -350,7 +358,7 @@ const parseInputId = (inputId) => {
 
 const DIVIDER = Array.from({ length: 40 }).fill('-').join('');
 
-const logMeta = (meta, includeDivider = false) => {
+const logMeta = (meta: any, includeDivider = false) => {
   console.log('Id   |', meta.id)
   console.log('File |', meta.filePath)
   console.log('Tags |', [...meta.tagSet].join(', '))
@@ -360,7 +368,7 @@ const logMeta = (meta, includeDivider = false) => {
   }
 }
 
-const logMetaList = (metaList) => {
+const logMetaList = (metaList: any[]) => {
   const sortedList = [...metaList].sort((metaA, metaB) => {
     if (metaA.filePath < metaB.filePath) {
       return 1
@@ -378,7 +386,7 @@ const logMetaList = (metaList) => {
   })
 }
 
-const logMetaById = (id) => {
+const logMetaById = (id: string) => {
   const meta = dataManager.data.metaById[id]
 
   if (!meta) {
@@ -389,7 +397,7 @@ const logMetaById = (id) => {
   logMeta(meta);
 }
 
-const validateStatus = (status, state) => {
+const validateStatus = (status: number, state: Record<string, unknown>) => {
   if (status === MetadataManager.SUCCESS) {
     return;
   } else if (status === MetadataManager.ERROR_ID_NOT_FOUND) {

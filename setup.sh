@@ -11,5 +11,5 @@ echo "Metadata file exists"
 mkdir -p backup
 echo "Backup directory exists"
 
-alias notes="npx ts-node src/index.js"
+alias notes="npx ts-node src/index.ts"
 echo "Created alias 'notes'"
