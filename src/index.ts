@@ -50,6 +50,24 @@ class Timestamp {
   minute;
   second;
 
+  static fromMonth(
+    month: string,
+    day: string,
+    hour: string,
+    minute: string,
+    second: string,
+    date = new Date(),
+  ) {
+    return new Timestamp(
+      date.getFullYear().toString(),
+      month,
+      day,
+      hour,
+      minute,
+      second,
+    );
+  }
+
   static fromDay(
     day: string,
     hour: string,
@@ -414,7 +432,7 @@ const inputIdParserConfig = [
   },
   {
     label: 'day and time',
-    regex: /^(\d{2}):(\d{2})(\d)-?(\d)(\d{2})$/,
+    regex: /^(\d{2}):?(\d{2})(\d)-?(\d)(\d{2})$/,
     parse: (match: RegExpMatchArray) => {
       const day = match[1];
       const hour = match[2];
@@ -422,6 +440,20 @@ const inputIdParserConfig = [
       const second = match[5];
 
       const timestamp = Timestamp.fromDay(day, hour, minute, second);
+      return timestamp;
+    },
+  },
+  {
+    label: 'month, day and time',
+    regex: /^(\d{2})-?(\d{2}):?(\d{2})(\d)-?(\d)(\d{2})$/,
+    parse: (match: RegExpMatchArray) => {
+      const month = match[1];
+      const day = match[2];
+      const hour = match[3];
+      const minute = match[4] + match[5];
+      const second = match[6];
+
+      const timestamp = Timestamp.fromMonth(month, day, hour, minute, second);
       return timestamp;
     },
   },
