@@ -1,4 +1,8 @@
 {
+  "ts-node": {
+    "swc": true,
+    "transpileOnly": true
+  },
   "extends": "@tsconfig/node20",
   "include": [
     "src"
