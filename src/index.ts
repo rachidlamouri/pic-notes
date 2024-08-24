@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { posix } from 'path';
+import { parseArgs } from 'util';
 
 const debug =
   process.env.DEBUG !== undefined
@@ -49,6 +50,67 @@ function assertIsStringArray(value: unknown): asserts value is string[] {
   assertIsArray(value);
   value.every(assertIsString);
 }
+
+type Usage = {
+  isDeprecated?: true;
+  description: string;
+  examples: string[];
+};
+
+const COMMAND_OPTIONS = ['last', 'latest', 'get'] as const;
+type CommandOptions = typeof COMMAND_OPTIONS;
+
+type Command = CommandOptions[number];
+
+const allUsage: Record<Command, Usage> = {
+  get: {
+    description:
+      "Prints either the latest picture's metadata or the metadata for the given id",
+    examples: ['--latest', '<id>'],
+  },
+  last: {
+    isDeprecated: true,
+    description: '',
+    examples: [],
+  },
+  latest: {
+    isDeprecated: true,
+    description: '',
+    examples: [],
+  },
+};
+
+const printUsage = (command: Command, replacement?: Command) => {
+  if (replacement) {
+    console.log(
+      `Command "${command}" is deprecated. Use "${replacement}" instead.\n`,
+    );
+  }
+
+  const commandToPrint = replacement ?? command;
+  const usageToPrint = allUsage[commandToPrint];
+
+  if (replacement || !allUsage[command].isDeprecated) {
+    console.log(commandToPrint + ': ' + usageToPrint.description);
+
+    const examples = usageToPrint.examples.map(
+      (example) => `  notes ${commandToPrint} ` + example,
+    );
+    examples.forEach((example) => {
+      console.log(example);
+    });
+  }
+};
+
+const withExit = <TCallable extends (...args: any[]) => void>(
+  callable: TCallable,
+  exitCode: 0 | 1,
+) => {
+  return (...args: Parameters<typeof callable>) => {
+    callable(...args);
+    process.exit(exitCode);
+  };
+};
 
 class Timestamp {
   year;
@@ -564,16 +626,29 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
 (function start() {
   const [command, ...argList] = process.argv.slice(2);
 
+  const {
+    values: { help },
+  } = parseArgs({
+    args: argList,
+    options: {
+      help: {
+        type: 'boolean',
+        short: 'h',
+        default: false,
+      },
+    },
+    strict: false,
+  });
+
+  if (help || !command) {
+    COMMAND_OPTIONS.forEach((command) => {
+      printUsage(command);
+    });
+    process.exit(0);
+  }
+
   if (command === 'latest' || command === 'last') {
-    const id = picsManager.pictureList[picsManager.pictureList.length - 1]?.id;
-
-    if (id === undefined) {
-      console.log('No pictures found');
-      process.exit(1);
-    }
-
-    logMetaById(id);
-    process.exit();
+    withExit(printUsage, 1)(command, 'get');
   }
 
   if (command === 'list') {
@@ -588,14 +663,40 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
   }
 
   if (command === 'get') {
-    const [inputId] = argList;
+    const {
+      values: { latest },
+      positionals: [inputId = ''],
+    } = parseArgs({
+      args: argList,
+      allowPositionals: true,
+      options: {
+        latest: {
+          type: 'boolean',
+          short: 'l',
+          default: false,
+        },
+      },
+    });
 
-    if (!inputId) {
-      console.log('Missing input id');
-      process.exit(1);
+    if ((latest && inputId.length > 0) || (!latest && inputId === '')) {
+      withExit(printUsage, 1)(command);
     }
 
-    const id = parseInputId(inputId);
+    let id: string;
+    if (latest) {
+      const potentialId =
+        picsManager.pictureList[picsManager.pictureList.length - 1]?.id;
+
+      if (!potentialId) {
+        console.log('No pictures to get');
+        process.exit(1);
+      }
+
+      id = potentialId;
+    } else {
+      id = parseInputId(inputId);
+    }
+
     logMetaById(id);
     process.exit();
   }
@@ -683,6 +784,5 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
     process.exit();
   }
 
-  console.log('Invalid command');
-  process.exit(1);
+  throw new Error('Unreachable');
 })();
