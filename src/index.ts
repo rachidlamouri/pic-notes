@@ -14,6 +14,14 @@ function assertIsNotNull<T>(value: T): asserts value is Exclude<T, null> {
   }
 }
 
+function assertIsNotUndefined<T>(
+  value: T,
+): asserts value is Exclude<T, undefined> {
+  if (value === undefined) {
+    throw Error('Unexpected undefined value');
+  }
+}
+
 function assertIsString(value: unknown): asserts value is string {
   if (typeof value !== 'string') {
     throw new Error('Unexpected non-string value');
@@ -170,6 +178,12 @@ class Picture {
     const match = fileName.match(matchingRegex);
     assertIsNotNull(match);
     const [_, year, month, day, hour, minute, second] = match;
+    assertIsNotUndefined(year);
+    assertIsNotUndefined(month);
+    assertIsNotUndefined(day);
+    assertIsNotUndefined(hour);
+    assertIsNotUndefined(minute);
+    assertIsNotUndefined(second);
     const timestamp = new Timestamp(year, month, day, hour, minute, second);
 
     this.fileName = fileName;
@@ -290,6 +304,7 @@ class MetadataManager {
     pictureList
       .flatMap((pic) => {
         const meta = guaranteedMetaById[pic.id];
+        assertIsNotUndefined(meta);
         return [...meta.tagSet].map((tag) => {
           return {
             pic,
@@ -422,6 +437,11 @@ const inputIdParserConfig = [
     label: 'time',
     regex: /^(\d{2})(\d)-?(\d)(\d{2})$/,
     parse: (match: RegExpMatchArray) => {
+      assertIsNotUndefined(match[1]);
+      assertIsNotUndefined(match[2]);
+      assertIsNotUndefined(match[3]);
+      assertIsNotUndefined(match[4]);
+
       const hour = match[1];
       const minute = match[2] + match[3];
       const second = match[4];
@@ -434,6 +454,12 @@ const inputIdParserConfig = [
     label: 'day and time',
     regex: /^(\d{2}):?(\d{2})(\d)-?(\d)(\d{2})$/,
     parse: (match: RegExpMatchArray) => {
+      assertIsNotUndefined(match[1]);
+      assertIsNotUndefined(match[2]);
+      assertIsNotUndefined(match[3]);
+      assertIsNotUndefined(match[4]);
+      assertIsNotUndefined(match[5]);
+
       const day = match[1];
       const hour = match[2];
       const minute = match[3] + match[4];
@@ -447,6 +473,12 @@ const inputIdParserConfig = [
     label: 'month, day and time',
     regex: /^(\d{2})-?(\d{2}):?(\d{2})(\d)-?(\d)(\d{2})$/,
     parse: (match: RegExpMatchArray) => {
+      assertIsNotUndefined(match[1]);
+      assertIsNotUndefined(match[2]);
+      assertIsNotUndefined(match[3]);
+      assertIsNotUndefined(match[4]);
+      assertIsNotUndefined(match[6]);
+
       const month = match[1];
       const day = match[2];
       const hour = match[3];
@@ -533,7 +565,13 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
   const [command, ...argList] = process.argv.slice(2);
 
   if (command === 'latest' || command === 'last') {
-    const id = picsManager.pictureList[picsManager.pictureList.length - 1].id;
+    const id = picsManager.pictureList[picsManager.pictureList.length - 1]?.id;
+
+    if (id === undefined) {
+      console.log('No pictures found');
+      process.exit(1);
+    }
+
     logMetaById(id);
     process.exit();
   }
@@ -607,11 +645,14 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
 
     const allMatchingIdList = [...anyMatchingIdSet].filter((id) => {
       const meta = dataManager.data.metaById[id];
+      assertIsNotUndefined(meta);
       return tagList.every((tag) => meta.tagSet.has(tag));
     });
 
     const metaList = allMatchingIdList.map((id) => {
-      return dataManager.data.metaById[id];
+      const meta = dataManager.data.metaById[id];
+      assertIsNotUndefined(meta);
+      return meta;
     });
 
     logMetaList(metaList);

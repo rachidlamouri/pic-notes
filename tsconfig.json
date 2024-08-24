@@ -4,6 +4,9 @@
     "transpileOnly": true
   },
   "extends": "@tsconfig/node20",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true
+  },
   "include": [
     "src"
   ]
