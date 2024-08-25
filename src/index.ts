@@ -57,16 +57,22 @@ type Usage = {
   examples: string[];
 };
 
-const COMMAND_OPTIONS = ['last', 'latest', 'get'] as const;
+const COMMAND_OPTIONS = ['list', 'last', 'latest', 'get'] as const;
 type CommandOptions = typeof COMMAND_OPTIONS;
 
 type Command = CommandOptions[number];
+
+const LIST_DEFAULT = 100;
 
 const allUsage: Record<Command, Usage> = {
   get: {
     description:
       "Prints either the latest picture's metadata or the metadata for the given id",
     examples: ['--latest', '<id>'],
+  },
+  list: {
+    description: `Prints the latest n metadata. n defaults to ${LIST_DEFAULT} and must be greater than zero or less than or equal to the default.`,
+    examples: ['', '<n>'],
   },
   last: {
     isDeprecated: true,
@@ -641,8 +647,12 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
   });
 
   if (help || !command) {
-    COMMAND_OPTIONS.forEach((command) => {
-      printUsage(command);
+    COMMAND_OPTIONS.toSorted().forEach((command) => {
+      const usage = allUsage[command];
+      if (!usage.isDeprecated) {
+        printUsage(command);
+        console.log();
+      }
     });
     process.exit(0);
   }
@@ -652,14 +662,16 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
   }
 
   if (command === 'list') {
-    const [stringCount] = argList;
+    const [stringCount = `${LIST_DEFAULT}`] = argList;
 
-    const count =
-      stringCount !== undefined ? Number.parseInt(stringCount) : Infinity;
+    const count = Number.parseInt(stringCount, 10);
+
+    if (Number.isNaN(count) || count < 1 || count > LIST_DEFAULT) {
+      withExit(printUsage, 1)(command);
+    }
+
     const metaSublist = Object.values(dataManager.data.metaById).slice(-count);
-
-    logMetaList(metaSublist);
-    process.exit();
+    withExit(logMetaList, 0)(metaSublist);
   }
 
   if (command === 'get') {
