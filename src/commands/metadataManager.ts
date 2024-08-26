@@ -4,6 +4,7 @@ import { assertIsObject } from '../utils/assertIsObject';
 import { assertIsString } from '../utils/assertIsString';
 import { PicturesManager } from './picturesManager';
 import fs from 'fs';
+import { withExit } from './withExit';
 
 type MetaJson = {
   id: string;
@@ -157,36 +158,31 @@ export class MetadataManager {
     fs.writeFileSync(MetadataManager.FILE_PATH, text);
   }
 
-  static SUCCESS = 0;
-  static ERROR_ID_NOT_FOUND = 1;
-
   addTags(id: string, tagList: string[]) {
-    const meta = this.data.metaById[id];
-
-    if (!meta) {
-      return MetadataManager.ERROR_ID_NOT_FOUND;
-    }
+    const meta = this.getMetaById(id);
 
     tagList.forEach((tag) => {
       meta.tagSet.add(tag);
     });
 
     this.write(this.data);
-    return MetadataManager.SUCCESS;
   }
 
   removeTags(id: string, tagList: string[]) {
-    const meta = this.data.metaById[id];
-
-    if (!meta) {
-      return MetadataManager.ERROR_ID_NOT_FOUND;
-    }
+    const meta = this.getMetaById(id);
 
     tagList.forEach((tag) => {
       meta.tagSet.delete(tag);
     });
 
     this.write(this.data);
-    return MetadataManager.SUCCESS;
+  }
+
+  getMetaById(id: string): Meta {
+    const meta = this.data.metaById[id];
+    if (meta === undefined) {
+      withExit(1, console.log, `Meta with id "${id}" does not exist`);
+    }
+    return meta;
   }
 }

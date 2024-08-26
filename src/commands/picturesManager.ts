@@ -39,4 +39,8 @@ export class PicturesManager {
         fs.renameSync(picture.filePath, transformedFilePath);
       });
   }
+
+  get lastPicture(): Picture | undefined {
+    return this.pictureList.at(-1);
+  }
 }
