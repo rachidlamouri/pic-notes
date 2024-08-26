@@ -1,9 +1,9 @@
-import { Command, COMMAND_OPTIONS } from './command';
+import { CommandName, COMMAND_NAME_OPTIONS } from './commandName';
 import { allCommands } from './allCommands';
 import { Meta, MetadataManager } from './metadataManager';
 import { withExit } from './withExit';
 
-export const printUsage = (command: Command, replacement?: Command) => {
+export const printUsage = (command: CommandName, replacement?: CommandName) => {
   if (replacement) {
     console.log(
       `Command "${command}" is deprecated. Use "${replacement}" instead.\n`,
@@ -29,7 +29,7 @@ export const printHelp = () => {
   console.log('notes <command> [...args]');
   console.log();
 
-  COMMAND_OPTIONS.toSorted().forEach((command) => {
+  COMMAND_NAME_OPTIONS.toSorted().forEach((command) => {
     const usage = allCommands[command];
     if (!usage.isDeprecated) {
       printUsage(command);

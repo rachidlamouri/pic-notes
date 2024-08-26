@@ -3,7 +3,7 @@ import { posix } from 'path';
 import { parseArgs } from './parse-args/parseArgs';
 import { assertIsNotUndefined } from './utils/assertIsNotUndefined';
 import { ParseableType } from './parse-args/parseableType';
-import { Command, isCommand } from './commands/command';
+import { CommandName, isCommandName } from './commands/commandName';
 import { LIST_DEFAULT } from './commands/allCommands';
 import { assertIsNotNull } from './utils/assertIsNotNull';
 import { assertIsString } from './utils/assertIsString';
@@ -115,7 +115,7 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
   withExit(1, () => {});
 };
 
-const parseAndValidateCommandAndHelp = (args: string[]): Command => {
+const parseAndValidateCommandAndHelp = (args: string[]): CommandName => {
   const {
     positionals: [command],
     options: { help },
@@ -135,7 +135,7 @@ const parseAndValidateCommandAndHelp = (args: string[]): Command => {
   });
 
   const hasCommand = command !== undefined;
-  const hasInvalidCommand = hasCommand && !isCommand(command);
+  const hasInvalidCommand = hasCommand && !isCommandName(command);
 
   if (hasInvalidCommand) {
     console.log(`Invalid command "${command}"`);
@@ -155,11 +155,11 @@ const parseAndValidateCommandAndHelp = (args: string[]): Command => {
 
   const command = parseAndValidateCommandAndHelp(args);
 
-  if (command === Command.latest || command === Command.last) {
-    withExit(1, printUsage, command, Command.get);
+  if (command === CommandName.latest || command === CommandName.last) {
+    withExit(1, printUsage, command, CommandName.get);
   }
 
-  if (command === Command.list) {
+  if (command === CommandName.list) {
     const {
       positionals: [count = LIST_DEFAULT],
     } = parseArgs({
@@ -180,7 +180,7 @@ const parseAndValidateCommandAndHelp = (args: string[]): Command => {
     withExit(0, printMetaList, metaSublist);
   }
 
-  if (command === Command.get) {
+  if (command === CommandName.get) {
     const {
       positionals: [inputId],
       options: { latest },
@@ -221,7 +221,7 @@ const parseAndValidateCommandAndHelp = (args: string[]): Command => {
     withExit(0, printMetaById, id);
   }
 
-  if (command === Command.tag) {
+  if (command === CommandName.tag) {
     const [inputId, ...tagList] = args;
 
     if (!inputId || tagList.length === 0) {
@@ -236,7 +236,7 @@ const parseAndValidateCommandAndHelp = (args: string[]): Command => {
     withExit(0, printMetaById, id);
   }
 
-  if (command === Command.untag) {
+  if (command === CommandName.untag) {
     const [inputId, ...tagList] = commandArgs;
 
     if (!inputId || tagList.length === 0) {
@@ -250,7 +250,7 @@ const parseAndValidateCommandAndHelp = (args: string[]): Command => {
     withExit(0, printMetaById, id);
   }
 
-  if (command === Command.search) {
+  if (command === CommandName.search) {
     const tagList = commandArgs;
 
     const anyMatchingIdSet = new Set(
@@ -275,7 +275,7 @@ const parseAndValidateCommandAndHelp = (args: string[]): Command => {
     withExit(0, printMetaList, metaList);
   }
 
-  if (command === Command.backup) {
+  if (command === CommandName.backup) {
     const BACKUP_DIR = 'backup';
     const timestamp = Timestamp.fromNow();
     const destinationDirectoryName = posix.join(
