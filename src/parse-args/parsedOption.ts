@@ -12,6 +12,12 @@ export type ParsedStringOption = {
   value: string;
 };
 
+export type ParsedStringList = {
+  type: ParseableType.StringList;
+  name: string;
+  value: string[];
+};
+
 export type ParsedNumberOption = {
   type: ParseableType.Number;
   name: string;
@@ -21,4 +27,5 @@ export type ParsedNumberOption = {
 export type ParsedOption =
   | ParsedBooleanOption
   | ParsedStringOption
+  | ParsedStringList
   | ParsedNumberOption;

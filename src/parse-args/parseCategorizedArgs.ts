@@ -8,6 +8,7 @@ import {
   ParsedBooleanOption,
   ParsedNumberOption,
   ParsedOption,
+  ParsedStringList,
   ParsedStringOption,
 } from './parsedOption';
 import {
@@ -61,56 +62,76 @@ export const parseCategorizedArgs = <
     }),
   );
 
-  const options = optionConfigs.map<ParsedOption>((config) => {
-    const option = categorizedArgOptionMap.get(config.name);
+  const options = optionConfigs
+    .filter((config) => {
+      const option = categorizedArgOptionMap.get(config.name);
+      return config.type !== ParseableType.StringList || option !== undefined;
+    })
+    .map<ParsedOption>((config) => {
+      const option = categorizedArgOptionMap.get(config.name);
 
-    if (config.type === ParseableType.Boolean) {
+      if (config.type === ParseableType.Boolean) {
+        return {
+          name: config.name,
+          type: config.type,
+          value: option !== undefined,
+        } satisfies ParsedBooleanOption;
+      }
+
+      if (option === undefined) {
+        throw new ParseArgsError(`Missing option named: ${config.name}`);
+      }
+
+      if (config.type === ParseableType.StringList) {
+        return {
+          name: config.name,
+          type: config.type,
+          value: option.variables,
+        } satisfies ParsedStringList;
+      }
+
+      if (!hasExactlyOne(option.variables)) {
+        throw new ParseArgsError(
+          `Option "${config.name}" must have exactly one variable.`,
+        );
+      }
+
+      const value = option.variables[0];
+
+      if (config.type === ParseableType.String) {
+        return {
+          name: config.name,
+          type: config.type,
+          value: value,
+        } satisfies ParsedStringOption;
+      }
+
+      const numericValue = Number.parseInt(value, 10);
+      if (Number.isNaN(numericValue)) {
+        throw new ParseArgsError(`Invalid number for option: ${config.name}`);
+      }
+
       return {
         name: config.name,
-        type: ParseableType.Boolean,
-        value: option !== undefined,
-      } satisfies ParsedBooleanOption;
-    }
+        type: config.type,
+        value: numericValue,
+      } satisfies ParsedNumberOption;
+    });
 
-    if (option === undefined) {
-      throw new ParseArgsError(`Missing option named: ${config.name}`);
-    }
-
-    if (!hasExactlyOne(option.variables)) {
-      throw new ParseArgsError(
-        `Option "${config.name}" must have exactly one variable.`,
-      );
-    }
-
-    const value = option.variables[0];
-
-    if (config.type === ParseableType.String) {
-      return {
-        name: config.name,
-        type: ParseableType.String,
-        value: value,
-      } satisfies ParsedStringOption;
-    }
-
-    const numericValue = Number.parseInt(value, 10);
-    if (Number.isNaN(numericValue)) {
-      throw new ParseArgsError(`Invalid number for option: ${config.name}`);
-    }
-
-    return {
-      name: config.name,
-      type: ParseableType.Number,
-      value: numericValue,
-    } satisfies ParsedNumberOption;
-  });
+  const defaultListOptions = optionConfigs
+    .filter((config) => config.type === ParseableType.StringList)
+    .map((config) => {
+      return [config.name, []];
+    });
 
   return {
     positionals: [...configuredPositionals, ...otherPositionals],
-    options: Object.fromEntries(
-      options.map((option) => {
+    options: Object.fromEntries([
+      ...defaultListOptions,
+      ...options.map((option) => {
         return [option.name, option.value];
       }),
-    ),
+    ]),
   } satisfies GeneralizedParsedArgs as unknown as ParsedArgs<
     TPositionalConfigs,
     TOptionConfigs

@@ -23,6 +23,7 @@ export type CommandsByName = UnionToIntersection<{
 
 export const buildCommandsByName = (managers: Managers) => {
   const get = new Get(managers);
+  const tag = new Tag(managers);
 
   const commandsByName: CommandsByName = {
     [CommandName.List]: new List(managers),
@@ -36,8 +37,11 @@ export const buildCommandsByName = (managers: Managers) => {
       ...managers,
       replacement: get,
     }),
-    [CommandName.Tag]: new Tag(managers),
-    [CommandName.Untag]: new Untag(managers),
+    [CommandName.Tag]: tag,
+    [CommandName.Untag]: new Untag({
+      ...managers,
+      replacement: tag,
+    }),
     [CommandName.Backup]: new Backup(managers),
   };
 

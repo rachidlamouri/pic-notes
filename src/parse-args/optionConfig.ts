@@ -10,6 +10,11 @@ type StringOptionConfig = {
   type: ParseableType.String;
 };
 
+type StringListOptionConfig = {
+  name: string;
+  type: ParseableType.StringList;
+};
+
 type NumberOptionConfig = {
   name: string;
   type: ParseableType.Number;
@@ -18,4 +23,5 @@ type NumberOptionConfig = {
 export type OptionConfig =
   | BooleanOptionConfig
   | StringOptionConfig
+  | StringListOptionConfig
   | NumberOptionConfig;
