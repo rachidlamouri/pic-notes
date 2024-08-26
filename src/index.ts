@@ -1,7 +1,8 @@
 import fs from 'fs';
 import { posix } from 'path';
-import { ParseableType, parseArgs } from './parseArgs';
-import { assertIsNotUndefined } from './assertIsNotUndefined';
+import { parseArgs } from './parse-args/parseArgs';
+import { assertIsNotUndefined } from './utils/assertIsNotUndefined';
+import { ParseableType } from './parse-args/parseableType';
 
 const debug =
   process.env.DEBUG !== undefined
