@@ -2,6 +2,9 @@
 
 nvm use
 
+npm ci
+echo ""
+
 mkdir -p pics
 echo "Pics directory exists"
 
