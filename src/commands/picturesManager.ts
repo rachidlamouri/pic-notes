@@ -2,6 +2,8 @@ import { debug } from '../utils/debug';
 import { Picture } from './picture';
 import fs from 'fs';
 import { posix } from 'path';
+import { withExit } from './withExit';
+import { printNoData } from './print';
 
 export class PicturesManager {
   pictureList: Picture[] = [];
@@ -40,7 +42,13 @@ export class PicturesManager {
       });
   }
 
-  get lastPicture(): Picture | undefined {
-    return this.pictureList.at(-1);
+  get lastPicture(): Picture {
+    const picture = this.pictureList.at(-1);
+
+    if (!picture) {
+      withExit(0, printNoData);
+    }
+
+    return picture;
   }
 }

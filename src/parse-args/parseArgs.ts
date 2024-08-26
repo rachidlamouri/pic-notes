@@ -24,7 +24,13 @@ export const parseArgs = <
   TPositionalConfigs,
   TOptionConfigs
 > => {
-  const categorizedArgs = categorizeArgs(args);
+  const optionConfigMap = new Map(
+    optionConfigs.map((option) => {
+      return [option.name, option];
+    }),
+  );
+
+  const categorizedArgs = categorizeArgs(optionConfigMap, args);
   const parsedArgs = parseCategorizedArgs(
     categorizedArgs,
     positionalConfigs,

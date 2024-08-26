@@ -32,7 +32,7 @@ export class Get extends Command<CommandName.Get> {
     });
 
     if ((latest && inputId !== undefined) || (!latest && !inputId)) {
-      console.log('Invalid input');
+      console.log('Must provide exactly one of "--latest" or <id>');
       withExit(1, this.printUsage.bind(this));
     }
 

@@ -3,7 +3,7 @@ import { CategorizedArgs, CategorizedArgOption } from './categorizeArgs';
 import { OptionConfig } from './optionConfig';
 import { ParseableType } from './parseableType';
 import { ParseArgsError } from './ParseArgsError';
-import { ParsedArgs } from './parsedArgs';
+import { GeneralizedParsedArgs, ParsedArgs } from './parsedArgs';
 import {
   ParsedBooleanOption,
   ParsedNumberOption,
@@ -26,12 +26,12 @@ export const parseCategorizedArgs = <
   positionalConfigs: TPositionalConfigs,
   optionConfigs: TOptionConfigs,
 ): ParsedArgs<TPositionalConfigs, TOptionConfigs> => {
-  const positionals = positionalConfigs
+  const configuredPositionals = positionalConfigs
     .map((config, index) => {
       const value = categorizedArgs.positionals[index];
 
       if (config.isRequired && value === undefined) {
-        throw new ParseArgsError(`Missing value at position: ${index}`);
+        throw new ParseArgsError(`Missing arg at position: ${index}`);
       }
 
       const parsedValue =
@@ -48,7 +48,11 @@ export const parseCategorizedArgs = <
       return positional.value;
     });
 
-  const parsed1OptionMap = new Map<
+  const otherPositionals = categorizedArgs.positionals.slice(
+    positionalConfigs.length,
+  );
+
+  const categorizedArgOptionMap = new Map<
     CategorizedArgOption['name'],
     CategorizedArgOption
   >(
@@ -58,7 +62,7 @@ export const parseCategorizedArgs = <
   );
 
   const options = optionConfigs.map<ParsedOption>((config) => {
-    const option = parsed1OptionMap.get(config.name);
+    const option = categorizedArgOptionMap.get(config.name);
 
     if (config.type === ParseableType.Boolean) {
       return {
@@ -101,11 +105,14 @@ export const parseCategorizedArgs = <
   });
 
   return {
-    positionals,
+    positionals: [...configuredPositionals, ...otherPositionals],
     options: Object.fromEntries(
       options.map((option) => {
         return [option.name, option.value];
       }),
     ),
-  } as unknown as ParsedArgs<TPositionalConfigs, TOptionConfigs>;
+  } satisfies GeneralizedParsedArgs as unknown as ParsedArgs<
+    TPositionalConfigs,
+    TOptionConfigs
+  >;
 };

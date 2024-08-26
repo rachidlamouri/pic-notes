@@ -1,3 +1,5 @@
+import { ParseableType } from '../../parse-args/parseableType';
+import { parseArgs } from '../../parse-args/parseArgs';
 import { Command } from '../command';
 import { CommandName } from '../commandName';
 import { printMeta } from '../print';
@@ -7,17 +9,42 @@ export class Tag extends Command<CommandName.Tag> {
   name = CommandName.Tag as const;
   description =
     "Adds one or more tags to a picture's metadata. Duplicate tags are not added twice";
-  examples = ['tag1 [, tag2 [, ...tagN]]'];
+  examples = [
+    '<id> <tag1> [, <tag2> [, ...<tagN>]]',
+    '--latest <tag1> [, <tag2> [, ...<tagN>]]',
+  ];
 
   run(commandArgs: string[]): void {
-    const [inputId, ...tagList] = commandArgs;
+    const {
+      positionals,
+      options: { latest },
+    } = parseArgs({
+      args: commandArgs,
+      positionals: [
+        {
+          type: ParseableType.String,
+          isRequired: true,
+        },
+      ] as const,
+      options: [
+        {
+          name: 'latest',
+          type: ParseableType.Boolean,
+        },
+      ],
+    });
 
-    if (!inputId || tagList.length === 0) {
-      console.log();
-      withExit(1, console.log, 'Missing id or tag list');
+    let tagList: string[];
+    let id: string;
+    if (latest) {
+      id = this.picturesManager.lastPicture.id;
+      tagList = positionals;
+    } else {
+      const inputId = positionals[0];
+      id = Command.parseInputId(inputId);
+      tagList = positionals.slice(1);
     }
 
-    const id = Command.parseInputId(inputId);
     this.metadataManager.addTags(id, tagList);
 
     const meta = this.metadataManager.getMetaById(id);

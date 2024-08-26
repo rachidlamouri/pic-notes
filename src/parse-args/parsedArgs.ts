@@ -1,4 +1,8 @@
-import { Simplify, UnionToIntersection } from 'type-fest';
+import {
+  SharedUnionFieldsDeep,
+  Simplify,
+  UnionToIntersection,
+} from 'type-fest';
 import { OptionConfig } from './optionConfig';
 import { ParsedOption } from './parsedOption';
 import { ParsedPositional } from './parsedPositional';
@@ -8,14 +12,19 @@ export type ParsedArgs<
   TPositionalConfigs extends readonly PositionalConfig[],
   TOptionConfigs extends readonly OptionConfig[],
 > = {
-  positionals: {
-    [TIndex in keyof TPositionalConfigs]: Extract<
-      ParsedPositional<
-        TPositionalConfigs[TIndex]['isRequired'] extends true ? true : undefined
-      >,
-      { type: TPositionalConfigs[TIndex]['type'] }
-    >['value'];
-  };
+  positionals: [
+    ...{
+      [TIndex in keyof TPositionalConfigs]: Extract<
+        ParsedPositional<
+          TPositionalConfigs[TIndex]['isRequired'] extends true
+            ? true
+            : undefined
+        >,
+        { type: TPositionalConfigs[TIndex]['type'] }
+      >['value'];
+    },
+    ...string[],
+  ];
   options: Simplify<
     UnionToIntersection<
       {
@@ -29,3 +38,7 @@ export type ParsedArgs<
     >
   >;
 };
+
+export type GeneralizedParsedArgs = SharedUnionFieldsDeep<
+  ParsedArgs<PositionalConfig[], OptionConfig[]>
+>;
