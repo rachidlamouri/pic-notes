@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { posix } from 'path';
-import { parseArgs } from 'util';
+import { ParseableType, parseArgs } from './parseArgs';
+import { assertIsNotUndefined } from './assertIsNotUndefined';
 
 const debug =
   process.env.DEBUG !== undefined
@@ -12,14 +13,6 @@ const debug =
 function assertIsNotNull<T>(value: T): asserts value is Exclude<T, null> {
   if (value === null) {
     throw Error('Unexpected null value');
-  }
-}
-
-function assertIsNotUndefined<T>(
-  value: T,
-): asserts value is Exclude<T, undefined> {
-  if (value === undefined) {
-    throw Error('Unexpected undefined value');
   }
 }
 
@@ -51,38 +44,78 @@ function assertIsStringArray(value: unknown): asserts value is string[] {
   value.every(assertIsString);
 }
 
-type Usage = {
+enum Command {
+  list = 'list',
+  latest = 'latest',
+  get = 'get',
+  search = 'search',
+  last = 'last',
+  tag = 'tag',
+  untag = 'untag',
+  backup = 'backup',
+}
+
+const COMMAND_OPTIONS = Object.values(Command);
+type CommandOptions = typeof COMMAND_OPTIONS;
+
+const isCommand = (value: string): value is Command => {
+  return (COMMAND_OPTIONS as string[]).includes(value);
+};
+
+type CommandDefinition = {
+  name: Command;
   isDeprecated?: true;
   description: string;
   examples: string[];
 };
 
-const COMMAND_OPTIONS = ['list', 'last', 'latest', 'get'] as const;
-type CommandOptions = typeof COMMAND_OPTIONS;
-
-type Command = CommandOptions[number];
-
 const LIST_DEFAULT = 100;
 
-const allUsage: Record<Command, Usage> = {
-  get: {
+const commands: Record<Command, CommandDefinition> = {
+  [Command.get]: {
+    name: Command.get,
     description:
       "Prints either the latest picture's metadata or the metadata for the given id",
     examples: ['--latest', '<id>'],
   },
-  list: {
+  [Command.list]: {
+    name: Command.list,
     description: `Prints the latest n metadata. n defaults to ${LIST_DEFAULT} and must be greater than zero or less than or equal to the default.`,
     examples: ['', '<n>'],
   },
-  last: {
+  [Command.last]: {
+    name: Command.last,
     isDeprecated: true,
     description: '',
     examples: [],
   },
-  latest: {
+  [Command.latest]: {
+    name: Command.latest,
     isDeprecated: true,
     description: '',
     examples: [],
+  },
+  [Command.search]: {
+    name: Command.search,
+    description: 'Prints all metadata that has every tag matched by the search',
+    examples: ['tag1 [, tag2 [, ...tagN]]'],
+  },
+  [Command.tag]: {
+    name: Command.tag,
+    description:
+      "Adds one or more tags to a picture's metadata. Duplicate tags are not added twice",
+    examples: ['tag1 [, tag2 [, ...tagN]]'],
+  },
+  [Command.untag]: {
+    name: Command.untag,
+    description:
+      "Removes one or more tags from a picture's metadata. Non-existant tags are ignored.",
+    examples: ['tag1 [, tag2 [, ...tagN]]'],
+  },
+  [Command.backup]: {
+    name: Command.backup,
+    description: 'Copies pictures and metadata to the "backup" folder',
+    examples: [''],
   },
 };
 
@@ -94,9 +127,9 @@ const printUsage = (command: Command, replacement?: Command) => {
   }
 
   const commandToPrint = replacement ?? command;
-  const usageToPrint = allUsage[commandToPrint];
+  const usageToPrint = commands[commandToPrint];
 
-  if (replacement || !allUsage[command].isDeprecated) {
+  if (replacement || !commands[command].isDeprecated) {
     console.log(commandToPrint + ': ' + usageToPrint.description);
 
     const examples = usageToPrint.examples.map(
@@ -108,15 +141,27 @@ const printUsage = (command: Command, replacement?: Command) => {
   }
 };
 
-const withExit = <TCallable extends (...args: any[]) => void>(
-  callable: TCallable,
-  exitCode: 0 | 1,
-) => {
-  return (...args: Parameters<typeof callable>) => {
-    callable(...args);
-    process.exit(exitCode);
-  };
+const printHelp = () => {
+  console.log('notes <command> [...args]');
+  console.log();
+
+  COMMAND_OPTIONS.toSorted().forEach((command) => {
+    const usage = commands[command];
+    if (!usage.isDeprecated) {
+      printUsage(command);
+      console.log();
+    }
+  });
 };
+
+function withExit<TCallable extends (...args: any[]) => void>(
+  exitCode: number,
+  callable: TCallable,
+  ...args: Parameters<typeof callable>
+): never {
+  callable(...args);
+  process.exit(exitCode);
+}
 
 class Timestamp {
   year;
@@ -565,8 +610,7 @@ const parseInputId = (inputId: string) => {
   );
 
   if (matchingConfig === undefined) {
-    console.log('Invalid id format');
-    process.exit(1);
+    withExit(1, console.log, 'Invalid id format');
   }
 
   const match = inputId.match(matchingConfig.regex);
@@ -589,6 +633,10 @@ const logMeta = (meta: Meta, includeDivider = false) => {
 };
 
 const logMetaList = (metaList: Meta[]) => {
+  if (metaList.length === 0) {
+    console.log('NO DATA');
+  }
+
   const sortedList = [...metaList].sort((metaA, metaB) => {
     if (metaA.filePath < metaB.filePath) {
       return 1;
@@ -610,8 +658,7 @@ const logMetaById = (id: string) => {
   const meta = dataManager.data.metaById[id];
 
   if (!meta) {
-    console.log('Id "' + id + '" does not exist');
-    process.exit();
+    withExit(0, console.log, 'Id "' + id + '" does not exist');
   }
 
   logMeta(meta);
@@ -626,128 +673,146 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
     console.log('Unhandled status: "' + status + '"');
   }
 
-  process.exit(1);
+  withExit(1, () => {});
+};
+
+const parseAndValidateCommandAndHelp = (args: string[]): Command => {
+  const {
+    positionals: [command],
+    options: { help },
+  } = parseArgs({
+    args: args,
+    positionals: [
+      {
+        type: ParseableType.String,
+      },
+    ] as const,
+    options: [
+      {
+        type: ParseableType.Boolean,
+        name: 'help',
+      },
+    ] as const,
+  });
+
+  const hasCommand = command !== undefined;
+  const hasInvalidCommand = hasCommand && !isCommand(command);
+
+  if (hasInvalidCommand) {
+    console.log(`Invalid command "${command}"`);
+    withExit(1, printHelp);
+  } else if (help && hasCommand && !hasInvalidCommand) {
+    withExit(0, printUsage, command);
+  } else if (help || !hasCommand) {
+    withExit(0, printHelp);
+  } else {
+    return command;
+  }
 };
 
 (function start() {
-  const [command, ...argList] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const commandArgs = args.slice(1);
 
-  const {
-    values: { help },
-  } = parseArgs({
-    args: argList,
-    options: {
-      help: {
-        type: 'boolean',
-        short: 'h',
-        default: false,
-      },
-    },
-    strict: false,
-  });
+  const command = parseAndValidateCommandAndHelp(args);
 
-  if (help || !command) {
-    COMMAND_OPTIONS.toSorted().forEach((command) => {
-      const usage = allUsage[command];
-      if (!usage.isDeprecated) {
-        printUsage(command);
-        console.log();
-      }
+  if (command === Command.latest || command === Command.last) {
+    withExit(1, printUsage, command, Command.get);
+  }
+
+  if (command === Command.list) {
+    const {
+      positionals: [count = LIST_DEFAULT],
+    } = parseArgs({
+      args: commandArgs,
+      positionals: [
+        {
+          type: ParseableType.Number,
+        },
+      ] as const,
+      options: [],
     });
-    process.exit(0);
-  }
 
-  if (command === 'latest' || command === 'last') {
-    withExit(printUsage, 1)(command, 'get');
-  }
-
-  if (command === 'list') {
-    const [stringCount = `${LIST_DEFAULT}`] = argList;
-
-    const count = Number.parseInt(stringCount, 10);
-
-    if (Number.isNaN(count) || count < 1 || count > LIST_DEFAULT) {
-      withExit(printUsage, 1)(command);
+    if (count < 1 || count > LIST_DEFAULT) {
+      withExit(1, printUsage, command);
     }
 
     const metaSublist = Object.values(dataManager.data.metaById).slice(-count);
-    withExit(logMetaList, 0)(metaSublist);
+    withExit(0, logMetaList, metaSublist);
   }
 
-  if (command === 'get') {
+  if (command === Command.get) {
     const {
-      values: { latest },
-      positionals: [inputId = ''],
+      positionals: [inputId],
+      options: { latest },
     } = parseArgs({
-      args: argList,
-      allowPositionals: true,
-      options: {
-        latest: {
-          type: 'boolean',
-          short: 'l',
-          default: false,
+      args: commandArgs,
+      positionals: [
+        {
+          type: ParseableType.String,
         },
-      },
+      ],
+      options: [
+        {
+          name: 'latest',
+          type: ParseableType.Boolean,
+        },
+      ],
     });
 
-    if ((latest && inputId.length > 0) || (!latest && inputId === '')) {
-      withExit(printUsage, 1)(command);
+    if (latest && inputId !== undefined) {
+      withExit(1, printUsage, command);
     }
 
     let id: string;
-    if (latest) {
+    if (latest && inputId === undefined) {
       const potentialId =
         picsManager.pictureList[picsManager.pictureList.length - 1]?.id;
 
       if (!potentialId) {
-        console.log('No pictures to get');
-        process.exit(1);
+        withExit(0, logMetaList, []);
       }
 
       id = potentialId;
     } else {
+      assertIsString(inputId);
       id = parseInputId(inputId);
     }
 
-    logMetaById(id);
-    process.exit();
+    withExit(0, logMetaById, id);
   }
 
-  if (command === 'tag') {
-    const [inputId, ...tagList] = argList;
+  if (command === Command.tag) {
+    const [inputId, ...tagList] = args;
 
     if (!inputId || tagList.length === 0) {
-      console.log('Missing id or tag list');
-      process.exit(1);
+      console.log();
+      withExit(1, console.log, 'Missing id or tag list');
     }
 
     const id = parseInputId(inputId);
     const status = dataManager.addTags(id, tagList);
     validateStatus(status, { id });
 
-    logMetaById(id);
-
-    process.exit();
+    withExit(0, logMetaById, id);
   }
 
-  if (command === 'untag') {
-    const [inputId, ...tagList] = argList;
+  if (command === Command.untag) {
+    const [inputId, ...tagList] = commandArgs;
 
     if (!inputId || tagList.length === 0) {
-      console.log('Missing id or tag list');
-      process.exit(1);
+      withExit(1, console.log, 'Missing id or tag list');
     }
 
     const id = parseInputId(inputId);
     const status = dataManager.removeTags(id, tagList);
     validateStatus(status, { id });
-    logMetaById(id);
 
-    process.exit();
+    withExit(0, logMetaById, id);
   }
 
-  if (command === 'search') {
-    const tagList = argList;
+  if (command === Command.search) {
+    const tagList = commandArgs;
 
     const anyMatchingIdSet = new Set(
       tagList.flatMap((tag) => {
@@ -768,11 +833,10 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
       return meta;
     });
 
-    logMetaList(metaList);
-    process.exit();
+    withExit(0, logMetaList, metaList);
   }
 
-  if (command === 'backup') {
+  if (command === Command.backup) {
     const BACKUP_DIR = 'backup';
     const timestamp = Timestamp.fromNow();
     const destinationDirectoryName = posix.join(
@@ -791,10 +855,6 @@ const validateStatus = (status: number, state: Record<string, unknown>) => {
       posix.join(destinationDirectoryName, MetadataManager.FILE_PATH),
     );
 
-    console.log('Backed up to: ' + destinationDirectoryName);
-
-    process.exit();
+    withExit(0, console.log, 'Backed up to: ' + destinationDirectoryName);
   }
-
-  throw new Error('Unreachable');
 })();
