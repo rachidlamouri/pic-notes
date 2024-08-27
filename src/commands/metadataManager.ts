@@ -9,6 +9,7 @@ import { assertIsString, isString } from '../utils/assertIsString';
 import { PicturesManager } from './picturesManager';
 import fs from 'fs';
 import { withExit } from './withExit';
+import { assertHasExactlyZero } from '../utils/assertHasExactlyZero';
 
 type TagTupleJson = readonly [name: string, value: string];
 
@@ -24,6 +25,13 @@ export class Tag {
   name: TagName;
   value: TagValue;
 
+  static fromSerialized(serializedTag: string): Tag {
+    const [tagName, tagValue, ...rest] = serializedTag.split(':');
+    assertIsString(tagName);
+    assertHasExactlyZero(rest);
+    return new Tag([tagName, tagValue]);
+  }
+
   constructor(tuple: TagTuple) {
     this.name = tuple[0];
     this.value = tuple[1];
@@ -36,7 +44,7 @@ export class Tag {
   }
 }
 
-class IdSet extends Set<string> {}
+export class IdSet extends Set<string> {}
 
 class TagMap extends Map<TagName, Tag> {}
 

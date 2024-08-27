@@ -53,12 +53,7 @@ export class Tag extends Command<CommandName.Tag> {
       tagPositionals = positionals.slice(1);
     }
 
-    const tagList: MetaTag[] = tagPositionals.map((tagPositional) => {
-      const [tagName, tagValue, ...rest] = tagPositional.split(':');
-      assertIsString(tagName);
-      assertHasExactlyZero(rest);
-      return new MetaTag([tagName, tagValue]);
-    });
+    const tagList: MetaTag[] = tagPositionals.map(MetaTag.fromSerialized);
 
     this.metadataManager.addTags(id, tagList);
     this.metadataManager.removeTags(id, untagList);
