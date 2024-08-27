@@ -1,7 +1,7 @@
 import { PicturesManager } from './commands/picturesManager';
 import { MetadataManager } from './commands/metadataManager';
 import { Command } from './commands/command';
-import { buildCommandsByName } from './commands/buildCommandsByname';
+import { buildCommandsByName } from './commands/buildCommandsByName';
 
 const picturesManager = new PicturesManager();
 picturesManager.init();
