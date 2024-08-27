@@ -9,67 +9,6 @@ import { PicturesManager } from './picturesManager';
 import { Timestamp } from './timestamp';
 import { withExit } from './withExit';
 
-// TODO: turn this into a single parser config with a single regex
-// TODO: add custom validation to parseArgs
-const inputIdParserConfig = [
-  {
-    label: 'time',
-    regex: /^(\d{2})(\d)-?(\d)(\d{2})$/,
-    parse: (match: RegExpMatchArray) => {
-      assertIsNotUndefined(match[1]);
-      assertIsNotUndefined(match[2]);
-      assertIsNotUndefined(match[3]);
-      assertIsNotUndefined(match[4]);
-
-      const hour = match[1];
-      const minute = match[2] + match[3];
-      const second = match[4];
-
-      const timestamp = Timestamp.fromToday(hour, minute, second);
-      return timestamp;
-    },
-  },
-  {
-    label: 'day and time',
-    regex: /^(\d{2}):?(\d{2})(\d)-?(\d)(\d{2})$/,
-    parse: (match: RegExpMatchArray) => {
-      assertIsNotUndefined(match[1]);
-      assertIsNotUndefined(match[2]);
-      assertIsNotUndefined(match[3]);
-      assertIsNotUndefined(match[4]);
-      assertIsNotUndefined(match[5]);
-
-      const day = match[1];
-      const hour = match[2];
-      const minute = match[3] + match[4];
-      const second = match[5];
-
-      const timestamp = Timestamp.fromDay(day, hour, minute, second);
-      return timestamp;
-    },
-  },
-  {
-    label: 'month, day and time',
-    regex: /^(\d{2})-?(\d{2}):?(\d{2})(\d)-?(\d)(\d{2})$/,
-    parse: (match: RegExpMatchArray) => {
-      assertIsNotUndefined(match[1]);
-      assertIsNotUndefined(match[2]);
-      assertIsNotUndefined(match[3]);
-      assertIsNotUndefined(match[4]);
-      assertIsNotUndefined(match[6]);
-
-      const month = match[1];
-      const day = match[2];
-      const hour = match[3];
-      const minute = match[4] + match[5];
-      const second = match[6];
-
-      const timestamp = Timestamp.fromMonth(month, day, hour, minute, second);
-      return timestamp;
-    },
-  },
-];
-
 export type CommandInput = {
   metadataManager: MetadataManager;
   picturesManager: PicturesManager;
@@ -122,18 +61,28 @@ export abstract class Command<TCommandName extends CommandName>
   }
 
   static parseInputId(inputId: string) {
-    const matchingConfig = inputIdParserConfig.find((config) =>
-      config.regex.test(inputId),
-    );
+    const ID_REGEX =
+      /^((((?<year>\d{4}|\d{2})-?)?((?<month>\d{2})-?))?(?<day>\d{2}):?)?(?<hour>\d{2})-?(?<minuteTens>\d)-?(?<minuteOnes>\d)-?(?<second>\d{2})$/;
 
-    if (matchingConfig === undefined) {
+    const match = inputId.match(ID_REGEX);
+
+    if (match?.groups === undefined) {
       withExit(1, console.log, 'Invalid id format');
     }
 
-    const match = inputId.match(matchingConfig.regex);
-    assertIsNotNull(match);
-    const timestamp = matchingConfig.parse(match);
+    const { year, month, day, hour, minuteTens, minuteOnes, second } =
+      match.groups;
 
+    const minute =
+      minuteTens !== undefined && minuteOnes !== undefined
+        ? minuteTens + minuteOnes
+        : undefined;
+
+    assertIsNotUndefined(hour);
+    assertIsNotUndefined(minute);
+    assertIsNotUndefined(second);
+
+    const timestamp = new Timestamp(year, month, day, hour, minute, second);
     return timestamp.hash;
   }
 

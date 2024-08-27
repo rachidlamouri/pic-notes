@@ -1,3 +1,11 @@
+function assertLength(value: string, length: 2 | 4) {
+  if (value.length !== length) {
+    throw new Error(
+      `Expected length "${length}" but received value "${value}"`,
+    );
+  }
+}
+
 export class Timestamp {
   year;
   month;
@@ -6,75 +14,51 @@ export class Timestamp {
   minute;
   second;
 
-  static fromMonth(
-    month: string,
-    day: string,
-    hour: string,
-    minute: string,
-    second: string,
-    date = new Date(),
-  ) {
-    return new Timestamp(
-      date.getFullYear().toString(),
-      month,
-      day,
-      hour,
-      minute,
-      second,
-    );
-  }
-
-  static fromDay(
-    day: string,
-    hour: string,
-    minute: string,
-    second: string,
-    date = new Date(),
-  ) {
-    return new Timestamp(
-      date.getFullYear().toString(),
-      (date.getMonth() + 1).toString().padStart(2, '0'),
-      day,
-      hour,
-      minute,
-      second,
-    );
-  }
-
-  static fromToday(
-    hour: string,
-    minute: string,
-    second: string,
-    date = new Date(),
-  ) {
-    return Timestamp.fromDay(
-      date.getDate().toString().padStart(2, '0'),
-      hour,
-      minute,
-      second,
-      date,
-    );
-  }
-
   static fromNow() {
-    const date = new Date();
-
-    return Timestamp.fromToday(
-      date.getHours().toString().padStart(2, '0'),
-      date.getMinutes().toString().padStart(2, '0'),
-      date.getSeconds().toString().padStart(2, '0'),
-      date,
+    return new Timestamp(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     );
   }
 
   constructor(
-    year: string,
-    month: string,
-    day: string,
-    hour: string,
-    minute: string,
-    second: string,
+    optionalYear: string | undefined,
+    optionalMonth: string | undefined,
+    optionalDay: string | undefined,
+    optionalHour: string | undefined,
+    optionalMinute: string | undefined,
+    optionalSecond: string | undefined,
   ) {
+    const date = new Date();
+    const currentYear = date.getFullYear().toString();
+    let year: string;
+    if (optionalYear === undefined) {
+      year = currentYear;
+    } else if (optionalYear.length === 2) {
+      year = currentYear.slice(0, 2) + optionalYear;
+    } else {
+      year = optionalYear;
+    }
+    const month =
+      optionalMonth ?? (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = optionalDay ?? date.getDate().toString().padStart(2, '0');
+    const hour = optionalHour ?? date.getHours().toString().padStart(2, '0');
+    const minute =
+      optionalMinute ?? date.getMinutes().toString().padStart(2, '0');
+    const second =
+      optionalSecond ?? date.getSeconds().toString().padStart(2, '0');
+
+    assertLength(year, 4);
+    assertLength(month, 2);
+    assertLength(day, 2);
+    assertLength(hour, 2);
+    assertLength(minute, 2);
+    assertLength(second, 2);
+
     this.year = year;
     this.month = month;
     this.day = day;
