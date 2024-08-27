@@ -1,9 +1,12 @@
 import { ParseableType } from '../../parse-args/parseableType';
 import { parseArgs } from '../../parse-args/parseArgs';
+import { assertIsString } from '../../utils/assertIsString';
 import { Command } from '../command';
 import { CommandName } from '../commandName';
 import { printMeta } from '../print';
 import { withExit } from '../withExit';
+import { Tag as MetaTag } from '../metadataManager';
+import { assertHasExactlyZero } from '../../utils/assertHasExactlyZero';
 
 export class Tag extends Command<CommandName.Tag> {
   name = CommandName.Tag as const;
@@ -39,16 +42,23 @@ export class Tag extends Command<CommandName.Tag> {
       ] as const,
     });
 
-    let tagList: string[];
+    let tagPositionals: string[];
     let id: string;
     if (latest) {
       id = this.picturesManager.lastPicture.id;
-      tagList = positionals;
+      tagPositionals = positionals;
     } else {
       const inputId = positionals[0];
       id = Command.parseInputId(inputId);
-      tagList = positionals.slice(1);
+      tagPositionals = positionals.slice(1);
     }
+
+    const tagList: MetaTag[] = tagPositionals.map((tagPositional) => {
+      const [tagName, tagValue, ...rest] = tagPositional.split(':');
+      assertIsString(tagName);
+      assertHasExactlyZero(rest);
+      return new MetaTag([tagName, tagValue]);
+    });
 
     this.metadataManager.addTags(id, tagList);
     this.metadataManager.removeTags(id, untagList);

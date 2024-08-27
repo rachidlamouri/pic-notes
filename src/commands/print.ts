@@ -5,7 +5,10 @@ const DIVIDER = Array.from({ length: 40 }).fill('-').join('');
 export const printMeta = (meta: Meta, includeDivider = false) => {
   console.log('Id   |', meta.id);
   console.log('File |', meta.filePath);
-  console.log('Tags |', [...meta.tagSet].join(', '));
+  console.log(
+    'Tags |',
+    [...meta.tagMap.values()].map((tag) => tag.serialized).join(', '),
+  );
 
   if (includeDivider) {
     console.log(DIVIDER);

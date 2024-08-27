@@ -14,7 +14,8 @@ export class Search extends Command<CommandName.Search> {
 
     const anyMatchingIdSet = new Set(
       tagList.flatMap((tag) => {
-        const subset = this.metadataManager.data.idSetByTag[tag] ?? new Set();
+        const subset =
+          this.metadataManager.data.idSetByTagName[tag] ?? new Set();
         return [...subset];
       }),
     );
@@ -22,7 +23,7 @@ export class Search extends Command<CommandName.Search> {
     const allMatchingIdList = [...anyMatchingIdSet].filter((id) => {
       const meta = this.metadataManager.data.metaById[id];
       assertIsNotUndefined(meta);
-      return tagList.every((tag) => meta.tagSet.has(tag));
+      return tagList.every((tag) => meta.tagMap.has(tag));
     });
 
     const metaList = allMatchingIdList.map((id) => {
