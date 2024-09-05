@@ -60,11 +60,15 @@ export abstract class Command<TCommandName extends CommandName>
     }
   }
 
-  static parseInputId(inputId: string) {
-    const ID_REGEX =
-      /^((((?<year>\d{4}|\d{2})-?)?((?<month>\d{2})-?))?(?<day>\d{2}):?)?(?<hour>\d{2})-?(?<minuteTens>\d)-?(?<minuteOnes>\d)-?(?<second>\d{2})$/;
+  static ID_REGEX =
+    /^((((?<year>\d{4}|\d{2})-?)?((?<month>\d{2})-?))?(?<day>\d{2}):?)?(?<hour>\d{2})-?(?<minuteTens>\d)-?(?<minuteOnes>\d)-?(?<second>\d{2})$/;
 
-    const match = inputId.match(ID_REGEX);
+  static isIdParseable(inputId: string) {
+    return Command.ID_REGEX.test(inputId);
+  }
+
+  static parseInputId(inputId: string) {
+    const match = inputId.match(Command.ID_REGEX);
 
     if (match?.groups === undefined) {
       withExit(1, console.log, 'Invalid id format');

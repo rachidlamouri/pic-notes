@@ -283,4 +283,9 @@ export class MetadataManager {
     }
     return meta;
   }
+
+  hasMeta(id: string): boolean {
+    const meta = this.data.metaById[id];
+    return meta !== undefined;
+  }
 }
