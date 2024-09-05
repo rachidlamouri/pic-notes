@@ -3,12 +3,29 @@ import { Meta } from './metadataManager';
 const DIVIDER = Array.from({ length: 40 }).fill('-').join('');
 
 export const printMeta = (meta: Meta, includeDivider = false) => {
+  const tags = [...meta.tagMap.values()].sort((tagA, tagB) => {
+    if (tagA.value !== undefined && tagB.value === undefined) {
+      return -1;
+    }
+
+    if (tagA.value === undefined && tagB.value !== undefined) {
+      return 1;
+    }
+
+    if (tagA.name < tagB.name) {
+      return -1;
+    }
+
+    if (tagA.name === tagB.name) {
+      return 0;
+    }
+
+    return 1;
+  });
+
   console.log('Id   |', meta.id);
   console.log('File |', meta.filePath);
-  console.log(
-    'Tags |',
-    [...meta.tagMap.values()].map((tag) => tag.serialized).join(', '),
-  );
+  console.log('Tags |', tags.map((tag) => tag.serialized).join(', '));
 
   if (includeDivider) {
     console.log(DIVIDER);
