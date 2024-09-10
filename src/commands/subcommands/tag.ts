@@ -73,9 +73,11 @@ export class Tag extends Command<CommandName.Tag> {
       const inputId = positionals[0];
       rawIdList = [inputId];
       rawTagList = positionals.slice(1);
-    } else {
+    } else if (inputIdList.length > 0) {
       rawIdList = inputIdList;
       rawTagList = inputTagList;
+    } else {
+      throw new Error('Unreachable');
     }
 
     const invalidRawIds = rawIdList.filter((id) => !Command.isIdParseable(id));
