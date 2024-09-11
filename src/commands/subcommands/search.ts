@@ -1,7 +1,9 @@
+import { ParseableType } from '../../parse-args/parseableType';
+import { parseArgs } from '../../parse-args/parseArgs';
 import { assertIsNotUndefined } from '../../utils/assertIsNotUndefined';
 import { Command } from '../command';
 import { CommandName } from '../commandName';
-import { IdSet, Tag } from '../metadataManager';
+import { hasTag, IdSet, Tag } from '../metadataManager';
 import { printMetaList } from '../print';
 import { withExit } from '../withExit';
 
@@ -12,9 +14,26 @@ export class Search extends Command<CommandName.Search> {
   examples = ['tag1 [, tag2 [, ...tagN]]'];
 
   run(commandArgs: string[]): void {
-    const tagPositionalList = commandArgs;
+    const {
+      positionals: tagPositionalList,
+      options: { ignore: ignoreOption = [] },
+    } = parseArgs({
+      args: commandArgs,
+      positionals: [],
+      options: [
+        {
+          name: 'ignore',
+          type: ParseableType.StringList,
+        },
+      ],
+    });
+
     const searchTagList: Tag[] = tagPositionalList.map((tagPositional) => {
       return Tag.fromSerialized(tagPositional);
+    });
+
+    const ignoreTagList: Tag[] = ignoreOption.map((ignoreValue) => {
+      return Tag.fromSerialized(ignoreValue);
     });
 
     const anyMatchingIdSet = new Set(
@@ -32,15 +51,15 @@ export class Search extends Command<CommandName.Search> {
         return meta;
       })
       .filter((meta) => {
-        return searchTagList.every((searchTag) => {
-          const savedTag = meta.tagMap.get(searchTag.name);
-
-          return (
-            savedTag !== undefined &&
-            (searchTag.value === undefined ||
-              savedTag.value === searchTag.value)
-          );
+        const hasEverySearchTag = searchTagList.every((searchTag) => {
+          return hasTag(meta, searchTag);
         });
+
+        const hasSomeIgnoreTags = ignoreTagList.some((ignoreTag) => {
+          return hasTag(meta, ignoreTag);
+        });
+
+        return hasEverySearchTag && !hasSomeIgnoreTags;
       });
 
     withExit(0, printMetaList, allMatchingMetaList);

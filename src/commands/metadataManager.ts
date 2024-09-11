@@ -60,6 +60,15 @@ export type Meta = {
   tagMap: TagMap;
 };
 
+export const hasTag = (meta: Meta, tag: Tag) => {
+  const savedTag = meta.tagMap.get(tag.name);
+
+  return (
+    savedTag !== undefined &&
+    (tag.value === undefined || savedTag.value === tag.value)
+  );
+};
+
 function assertIsTagSetJson(
   tagSet: unknown[],
 ): asserts tagSet is MetaJson['tagSet'] {
