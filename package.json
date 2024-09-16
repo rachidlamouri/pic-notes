@@ -6,6 +6,8 @@
   "dependencies": {
     "@swc/core": "^1.7.12",
     "@tsconfig/node20": "^20.1.4",
+    "@types/parsimmon": "^1.10.9",
+    "parsimmon": "^1.18.1",
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
     "type-fest": "^4.25.0",
