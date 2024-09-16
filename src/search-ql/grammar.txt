@@ -1,0 +1,59 @@
+/**
+ * Key
+ *
+ * TOP: Root
+ * EXP: Expression
+ * UNT: Unit
+ * TV: Tagged Value
+ * TAG: Tag
+ * VAL: Value
+ * KEB: Kebab
+ * EMP: Empty String
+ *
+ * Operators
+ * ^: Intersection
+ * +: Union
+ * -: Difference
+ */
+
+/**
+ * Ambiguous Grammar
+ *
+ * EXP -> (EXP) | EXP ^ EXP | EXP + EXP | EXP - EXP | TV | TAG
+ *
+ * Precedence: Parenthesis, intersection, union, difference
+ *
+ * Associativity: left for all operators
+ */
+
+/**
+ * Unambiguous Left Recursive Grammar
+ *
+ * TOP  -> EXP1
+ * EXP1 -> EXP1 [+-] EXP2 | EXP2
+ * EXP2 -> EXP2 ^ EXP3 | EXP3
+ * EXP3 -> ( EXP1 ) | EXP4
+ * EXP4 -> UNT
+ * UNT  -> TV | TAG
+ * TV   -> TAG:VAL
+ * TAG  -> KEB
+ * VAL  -> KEB
+ * KEB  -> [0-9a-zA-Z?]+(-[0-9a-zA-Z?]+)*
+ */
+
+/**
+ * Unambiguous Right Recursive Grammar
+ *
+ * TOP   -> EXP1
+ * EXP1  -> EXP2 EXP1'
+ * EXP1' -> [+-] EXP2 EXP1' | ε
+ * EXP2  -> EXP3 EXP2'
+ * EXP2' -> ^ EXP3 EXP2' | ε
+ * EXP3  -> ( EXP1 ) | EXP4
+ * EXP4  -> UNT
+ * UNT   -> TV | TAG
+ * TV    -> TAG:VAL
+ * TAG   -> KEB
+ * VAL   -> KEB
+ * KEB   -> [0-9a-zA-Z?]+(-[0-9a-zA-Z?]+)*
+ */
