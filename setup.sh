@@ -11,6 +11,9 @@ echo "Pics directory exists"
 touch .metadata
 echo "Metadata file exists"
 
+touch .notes-config
+echo "Notes config file exists"
+
 mkdir -p backup
 echo "Backup directory exists"
 

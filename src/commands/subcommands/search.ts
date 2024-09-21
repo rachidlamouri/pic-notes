@@ -25,8 +25,7 @@ export class Search extends Command<CommandName.Search> {
 
     const compute = (node: ExpressionNode): IdSet => {
       if (node instanceof TagNode) {
-        const matchingIdSet =
-          this.metadataManager.data.idSetByTagName[node.tag.name] ?? [];
+        const matchingIdSet = this.metadataManager.getIds(node.tag);
         const matchingMetaList = [...matchingIdSet]
           .map((id) => {
             const meta = this.metadataManager.data.metaById[id];
@@ -108,8 +107,7 @@ export class Search extends Command<CommandName.Search> {
 
     const anyMatchingIdSet = new Set(
       searchTagList.flatMap((tag) => {
-        const subset =
-          this.metadataManager.data.idSetByTagName[tag.name] ?? new IdSet();
+        const subset = this.metadataManager.getIds(tag);
         return [...subset];
       }),
     );

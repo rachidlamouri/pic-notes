@@ -27,8 +27,8 @@ export class Backup extends Command<CommandName.Backup> {
       { recursive: true },
     );
     fs.cpSync(
-      MetadataManager.FILE_PATH,
-      posix.join(destinationDirectoryName, MetadataManager.FILE_PATH),
+      MetadataManager.METADATA_FILE_PATH,
+      posix.join(destinationDirectoryName, MetadataManager.METADATA_FILE_PATH),
     );
 
     withExit(0, console.log, 'Backed up to: ' + destinationDirectoryName);

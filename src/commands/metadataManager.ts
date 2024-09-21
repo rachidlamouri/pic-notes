@@ -21,6 +21,8 @@ type TagValue = TagTuple[1];
 
 type TagName = TagTuple[0];
 
+type SerializedTag = string;
+
 export class Tag {
   name: TagName;
   value: TagValue;
@@ -97,25 +99,42 @@ function assertIsMetaJson(value: unknown): asserts value is MetaJson {
 
 type MetadataJson = {
   metaById: Record<Meta['id'], MetaJson>;
-  idSetByTagName: Record<TagName, string[]>;
+  idSetByTagName?: Record<TagName, string[]>;
+  primaryIndex?: Record<TagName, string[]>;
+  secondaryIndex?: Record<SerializedTag, string[]>;
 };
 
 type Metadata = {
   metaById: Record<Meta['id'], Meta>;
-  idSetByTagName: Record<TagName, IdSet>;
+  primaryIndex: Record<TagName, IdSet>;
+  secondaryIndex: Record<SerializedTag, IdSet>;
+};
+
+type ConfigJson = {
+  secondaryIndexes: string[];
+};
+
+type Config = {
+  secondaryIndexes: Set<string>;
 };
 
 export class MetadataManager {
   data: Metadata = {
     metaById: {},
-    idSetByTagName: {},
+    primaryIndex: {},
+    secondaryIndex: {},
   };
 
-  static FILE_PATH = '.metadata';
+  config: Config = {
+    secondaryIndexes: new Set(),
+  };
+
+  static METADATA_FILE_PATH = '.metadata';
+  static CONFIG_FILE_PATH = '.notes-config';
 
   init(picsManager: PicturesManager) {
     const pictureList = picsManager.pictureList;
-    let data = this.read();
+    let { metadata: data, config } = this.read();
 
     const guaranteedMetaById: Metadata['metaById'] = Object.fromEntries(
       pictureList.map((pic) => {
@@ -128,7 +147,34 @@ export class MetadataManager {
       }),
     );
 
-    const guaranteedIdSetByTagName: Record<TagName, IdSet> = {};
+    const pictureTagList = pictureList.flatMap((pic) => {
+      const meta = guaranteedMetaById[pic.id];
+      assertIsNotUndefined(meta);
+      return [...meta.tagMap.values()].map((tag) => {
+        return {
+          pic,
+          tag,
+        };
+      });
+    });
+
+    const guaranteedPrimaryIndex: Record<TagName, IdSet> = {};
+    pictureTagList.forEach(({ pic, tag }) => {
+      const guaranteedIndex = guaranteedPrimaryIndex[tag.name] ?? new IdSet();
+      guaranteedIndex.add(pic.id);
+      guaranteedPrimaryIndex[tag.name] = guaranteedIndex;
+    });
+
+    const guaranteedSecondaryIndex: Record<SerializedTag, IdSet> = {};
+    pictureTagList
+      .filter(({ tag }) => config.secondaryIndexes.has(tag.name))
+      .forEach(({ pic, tag }) => {
+        const guaranteedIndex =
+          guaranteedSecondaryIndex[tag.serialized] ?? new IdSet();
+        guaranteedIndex.add(pic.id);
+        guaranteedSecondaryIndex[tag.serialized] = guaranteedIndex;
+      });
+
     pictureList
       .flatMap((pic) => {
         const meta = guaranteedMetaById[pic.id];
@@ -141,38 +187,34 @@ export class MetadataManager {
         });
       })
       .forEach(({ pic, tagName }) => {
-        const guaranteedIdSet =
-          guaranteedIdSetByTagName[tagName] ?? new IdSet();
+        const guaranteedIdSet = guaranteedPrimaryIndex[tagName] ?? new IdSet();
         guaranteedIdSet.add(pic.id);
-        guaranteedIdSetByTagName[tagName] = guaranteedIdSet;
+        guaranteedPrimaryIndex[tagName] = guaranteedIdSet;
       });
 
     const guaranteedData: Metadata = {
       metaById: guaranteedMetaById,
-      idSetByTagName: guaranteedIdSetByTagName,
+      primaryIndex: guaranteedPrimaryIndex,
+      secondaryIndex: guaranteedSecondaryIndex,
     };
 
     this.write(guaranteedData);
     this.data = guaranteedData;
+    this.config = config;
   }
 
-  read(): Metadata {
-    const text = fs.readFileSync(MetadataManager.FILE_PATH, 'utf8');
+  readMetadata(): Metadata {
+    const text = fs.readFileSync(MetadataManager.METADATA_FILE_PATH, 'utf8');
 
-    let data: unknown;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = {
-        metaById: {},
-        idSetByTagName: {},
-      } satisfies Metadata;
-    }
+    const data: unknown = JSON.parse(text);
 
     assertIsObject(data);
     assertIsObject(data.metaById);
-    data.idSetByTagName = data.idSetByTag ?? data.idSetByTagName;
-    assertIsObject(data.idSetByTagName);
+    data.primaryIndex =
+      data.idSetByTag ?? data.idSetByTagName ?? data.primaryIndex;
+    assertIsObject(data.primaryIndex);
+    data.secondaryIndex = data.secondaryIndex ?? {};
+    assertIsObject(data.secondaryIndex);
 
     const modifiedMetaById: Metadata['metaById'] = Object.fromEntries(
       Object.entries(data.metaById).map(([id, metaJson]) => {
@@ -196,18 +238,50 @@ export class MetadataManager {
       }),
     );
 
-    const modifiedIdSetByTagName: Metadata['idSetByTagName'] =
+    const modifiedPrimaryIndex: Metadata['primaryIndex'] = Object.fromEntries(
+      Object.entries(data.primaryIndex).map(([tagName, idList]) => {
+        assertIsArray(idList);
+        assertIsStringArray(idList);
+        return [tagName, new IdSet(idList)];
+      }),
+    );
+
+    const modifiedSecondaryIndex: Metadata['secondaryIndex'] =
       Object.fromEntries(
-        Object.entries(data.idSetByTagName).map(([tag, idList]) => {
+        Object.entries(data.secondaryIndex).map(([serializedTag, idList]) => {
           assertIsArray(idList);
           assertIsStringArray(idList);
-          return [tag, new IdSet(idList)];
+          return [serializedTag, new IdSet(idList)];
         }),
       );
 
     return {
       metaById: modifiedMetaById,
-      idSetByTagName: modifiedIdSetByTagName,
+      primaryIndex: modifiedPrimaryIndex,
+      secondaryIndex: modifiedSecondaryIndex,
+    };
+  }
+
+  readConfig(): Config {
+    const text = fs.readFileSync(MetadataManager.CONFIG_FILE_PATH, 'utf8');
+
+    const data = JSON.parse(text);
+
+    assertIsObject(data);
+    assertIsArray(data.secondaryIndexes);
+    assertIsStringArray(data.secondaryIndexes);
+
+    const config: Config = {
+      secondaryIndexes: new Set(data.secondaryIndexes),
+    };
+
+    return config;
+  }
+
+  read(): { metadata: Metadata; config: Config } {
+    return {
+      metadata: this.readMetadata(),
+      config: this.readConfig(),
     };
   }
 
@@ -233,9 +307,9 @@ export class MetadataManager {
       }),
     );
 
-    const modifiedIdSetByTag: MetadataJson['idSetByTagName'] =
+    const modifiedPrimaryIndex: MetadataJson['primaryIndex'] =
       Object.fromEntries(
-        Object.entries(data.idSetByTagName)
+        Object.entries(data.primaryIndex)
           .toSorted(([tagNameA], [tagNameB]) => {
             return tagNameA.localeCompare(tagNameB);
           })
@@ -244,13 +318,25 @@ export class MetadataManager {
           }),
       );
 
+    const modifiedSecondaryIndex: MetadataJson['primaryIndex'] =
+      Object.fromEntries(
+        Object.entries(data.secondaryIndex)
+          .toSorted(([serializedTagA], [serializedTagB]) => {
+            return serializedTagA.localeCompare(serializedTagB);
+          })
+          .map(([serializedTag, idSet]) => {
+            return [serializedTag, [...idSet]];
+          }),
+      );
+
     const metadataJson: MetadataJson = {
       metaById: modifiedMetaById,
-      idSetByTagName: modifiedIdSetByTag,
+      primaryIndex: modifiedPrimaryIndex,
+      secondaryIndex: modifiedSecondaryIndex,
     };
 
     const text = JSON.stringify(metadataJson, null, 2);
-    fs.writeFileSync(MetadataManager.FILE_PATH, text);
+    fs.writeFileSync(MetadataManager.METADATA_FILE_PATH, text);
   }
 
   addTags(id: string, tagList: Tag[]) {
@@ -273,6 +359,16 @@ export class MetadataManager {
     this.write(this.data);
   }
 
+  getIds(tag: Tag): IdSet {
+    console.log(this.config.secondaryIndexes);
+
+    if (tag.value !== undefined && this.config.secondaryIndexes.has(tag.name)) {
+      return this.data.secondaryIndex[tag.serialized] ?? new IdSet();
+    }
+
+    return this.data.primaryIndex[tag.name] ?? new IdSet();
+  }
+
   getMetaById(id: string): Meta {
     const meta = this.data.metaById[id];
     if (meta === undefined) {
@@ -287,22 +383,28 @@ export class MetadataManager {
   }
 
   rebuildIndexes() {
-    this.data.idSetByTagName = {};
-
-    Object.values(this.data.metaById)
-      .flatMap((meta) => {
-        return [...meta.tagMap.values()].map((tag) => {
-          return {
-            meta,
-            tag,
-          };
-        });
-      })
-      .forEach(({ meta, tag }) => {
-        const idSet = this.data.idSetByTagName[tag.name] ?? new IdSet();
-        idSet.add(meta.id);
-        this.data.idSetByTagName[tag.name] = idSet;
+    const metaTags = Object.values(this.data.metaById).flatMap((meta) => {
+      return [...meta.tagMap.values()].map((tag) => {
+        return {
+          meta,
+          tag,
+        };
       });
+    });
+
+    this.data.primaryIndex = {};
+    metaTags.forEach(({ meta, tag }) => {
+      const idSet = this.data.primaryIndex[tag.name] ?? new IdSet();
+      idSet.add(meta.id);
+      this.data.primaryIndex[tag.name] = idSet;
+    });
+
+    this.data.secondaryIndex = {};
+    metaTags.forEach(({ meta, tag }) => {
+      const idSet = this.data.secondaryIndex[tag.serialized] ?? new IdSet();
+      idSet.add(meta.id);
+      this.data.secondaryIndex[tag.serialized] = idSet;
+    });
 
     this.write(this.data);
   }
