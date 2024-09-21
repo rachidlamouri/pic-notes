@@ -97,20 +97,17 @@ function assertIsMetaJson(value: unknown): asserts value is MetaJson {
 
 type MetadataJson = {
   metaById: Record<Meta['id'], MetaJson>;
-  idByFileName: Record<string, Meta['id']>;
   idSetByTagName: Record<TagName, string[]>;
 };
 
 type Metadata = {
   metaById: Record<Meta['id'], Meta>;
-  idByFileName: Record<string, Meta['id']>;
   idSetByTagName: Record<TagName, IdSet>;
 };
 
 export class MetadataManager {
   data: Metadata = {
     metaById: {},
-    idByFileName: {},
     idSetByTagName: {},
   };
 
@@ -128,17 +125,6 @@ export class MetadataManager {
           tagMap: data.metaById[pic.id]?.tagMap ?? new TagMap(),
         };
         return [pic.id, guaranteedMeta];
-      }),
-    );
-
-    const guaranteedIdByFileName: Metadata['idByFileName'] = Object.fromEntries(
-      pictureList.map((pic) => {
-        const guaranteedId =
-          pic.fileName in data.idByFileName
-            ? data.idByFileName[pic.fileName]
-            : pic.id;
-        assertIsString(guaranteedId);
-        return [pic.fileName, guaranteedId];
       }),
     );
 
@@ -163,7 +149,6 @@ export class MetadataManager {
 
     const guaranteedData: Metadata = {
       metaById: guaranteedMetaById,
-      idByFileName: guaranteedIdByFileName,
       idSetByTagName: guaranteedIdSetByTagName,
     };
 
@@ -180,15 +165,12 @@ export class MetadataManager {
     } catch {
       data = {
         metaById: {},
-        idByFileName: {},
         idSetByTagName: {},
       } satisfies Metadata;
     }
 
     assertIsObject(data);
     assertIsObject(data.metaById);
-    assertIsObject(data.idByFileName);
-    assertHasStringValues(data.idByFileName);
     data.idSetByTagName = data.idSetByTag ?? data.idSetByTagName;
     assertIsObject(data.idSetByTagName);
 
@@ -225,7 +207,6 @@ export class MetadataManager {
 
     return {
       metaById: modifiedMetaById,
-      idByFileName: data.idByFileName ?? {},
       idSetByTagName: modifiedIdSetByTagName,
     };
   }
@@ -265,7 +246,6 @@ export class MetadataManager {
 
     const metadataJson: MetadataJson = {
       metaById: modifiedMetaById,
-      idByFileName: data.idByFileName,
       idSetByTagName: modifiedIdSetByTag,
     };
 
