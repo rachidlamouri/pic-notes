@@ -305,4 +305,25 @@ export class MetadataManager {
     const meta = this.data.metaById[id];
     return meta !== undefined;
   }
+
+  rebuildIndexes() {
+    this.data.idSetByTagName = {};
+
+    Object.values(this.data.metaById)
+      .flatMap((meta) => {
+        return [...meta.tagMap.values()].map((tag) => {
+          return {
+            meta,
+            tag,
+          };
+        });
+      })
+      .forEach(({ meta, tag }) => {
+        const idSet = this.data.idSetByTagName[tag.name] ?? new IdSet();
+        idSet.add(meta.id);
+        this.data.idSetByTagName[tag.name] = idSet;
+      });
+
+    this.write(this.data);
+  }
 }

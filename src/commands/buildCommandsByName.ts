@@ -9,6 +9,7 @@ import { Last } from './subcommands/last';
 import { Tag } from './subcommands/tag';
 import { Untag } from './subcommands/untag';
 import { Backup } from './subcommands/backup';
+import { RebuildIndexes } from './subcommands/rebuildIndexes';
 import { MetadataManager } from './metadataManager';
 import { PicturesManager } from './picturesManager';
 
@@ -43,6 +44,7 @@ export const buildCommandsByName = (managers: Managers) => {
       replacement: tag,
     }),
     [CommandName.Backup]: new Backup(managers),
+    [CommandName.RebuildIndexes]: new RebuildIndexes(managers),
   };
 
   return { commandsByName };

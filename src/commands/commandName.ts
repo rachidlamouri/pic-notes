@@ -7,6 +7,7 @@ export enum CommandName {
   Tag = 'tag',
   Untag = 'untag',
   Backup = 'backup',
+  RebuildIndexes = 'rebuild-indexes',
 }
 
 const COMMAND_NAME_OPTIONS = Object.values(CommandName);
