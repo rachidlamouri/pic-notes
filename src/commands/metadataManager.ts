@@ -236,13 +236,17 @@ export class MetadataManager {
         const metaJson: MetaJson = {
           id,
           filePath: meta.filePath,
-          tagSet: [...meta.tagMap.values()].map((tag) => {
-            if (tag.value === undefined) {
-              return tag.name;
-            }
+          tagSet: [...meta.tagMap.values()]
+            .toSorted((tagA, tagB) => {
+              return tagA.name.localeCompare(tagB.name);
+            })
+            .map((tag) => {
+              if (tag.value === undefined) {
+                return tag.name;
+              }
 
-            return [tag.name, tag.value];
-          }),
+              return [tag.name, tag.value];
+            }),
         };
         return [id, metaJson];
       }),
@@ -250,9 +254,13 @@ export class MetadataManager {
 
     const modifiedIdSetByTag: MetadataJson['idSetByTagName'] =
       Object.fromEntries(
-        Object.entries(data.idSetByTagName).map(([tagName, idSet]) => {
-          return [tagName, [...idSet]];
-        }),
+        Object.entries(data.idSetByTagName)
+          .toSorted(([tagNameA], [tagNameB]) => {
+            return tagNameA.localeCompare(tagNameB);
+          })
+          .map(([tagName, idSet]) => {
+            return [tagName, [...idSet]];
+          }),
       );
 
     const metadataJson: MetadataJson = {
