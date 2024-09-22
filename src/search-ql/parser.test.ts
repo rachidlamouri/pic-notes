@@ -4,6 +4,17 @@ import { UnionNode } from './nodes/unionNode';
 import { DifferenceNode } from './nodes/differenceNode';
 import { parse } from './parser';
 import assert from 'assert';
+import { SelectAllNode } from './nodes/selectAllNode';
+
+console.log('• Testing select all');
+{
+  const result = parse('*');
+  assert.deepEqual(
+    // -
+    result,
+    new SelectAllNode(),
+  );
+}
 
 console.log('• Testing tag');
 {

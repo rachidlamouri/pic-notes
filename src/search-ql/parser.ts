@@ -15,6 +15,7 @@ import { UnionNode } from './nodes/unionNode';
 import { DifferenceNode } from './nodes/differenceNode';
 import { Constructor } from 'type-fest';
 import { GenericOperationNode, OperationNode } from './nodes/operationNode';
+import { SelectAllNode } from './nodes/selectAllNode';
 
 const KEBAB = /[0-9a-zA-Z?]+(-[0-9a-zA-Z?]+)*/;
 
@@ -154,8 +155,9 @@ type Language = {
   subexpression2: ExpressionNode;
   subexpression2Prime: AccumulatedOperation | null;
   subexpression3: ExpressionNode;
-  subexpression4: TagNode;
-  unit: TagNode;
+  subexpression4: SelectAllNode | TagNode;
+  unit: SelectAllNode | TagNode;
+  selectAll: SelectAllNode;
   taggedValue: TagNode;
   tag: TagNode;
   value: string;
@@ -373,13 +375,22 @@ const language = P.createLanguage<Language>({
     );
   },
   unit: (l) => {
-    return withIndentDebug<Language['unit']>(
+    return withIndentDebug(
       'unt',
-      P.alt(
+      P.alt<Language['unit']>(
         // -
+        l.selectAll,
         l.taggedValue,
         l.tag,
       ),
+    );
+  },
+  selectAll: (l) => {
+    return withIndentDebug<Language['selectAll']>(
+      'all',
+      P.string('*').map(() => {
+        return new SelectAllNode();
+      }),
     );
   },
   taggedValue: (l) => {

@@ -4,7 +4,8 @@
  * TOP: Root
  * EXP: Expression
  * UNT: Unit
- * TV: Tagged Value
+ * ALL: Select all
+ * TV : Tagged Value
  * TAG: Tag
  * VAL: Value
  * KEB: Kebab
@@ -19,7 +20,7 @@
 /**
  * Ambiguous Grammar
  *
- * EXP -> (EXP) | EXP ^ EXP | EXP + EXP | EXP - EXP | TV | TAG
+ * EXP -> (EXP) | EXP ^ EXP | EXP + EXP | EXP - EXP | ALL | TV | TAG
  *
  * Precedence: Parenthesis, intersection, union, difference
  *
@@ -34,7 +35,8 @@
  * EXP2 -> EXP2 ^ EXP3 | EXP3
  * EXP3 -> ( EXP1 ) | EXP4
  * EXP4 -> UNT
- * UNT  -> TV | TAG
+ * UNT  -> ALL | TV | TAG
+ * ALL  -> *
  * TV   -> TAG:VAL
  * TAG  -> KEB
  * VAL  -> KEB
@@ -51,7 +53,8 @@
  * EXP2' -> ^ EXP3 EXP2' | ε
  * EXP3  -> ( EXP1 ) | EXP4
  * EXP4  -> UNT
- * UNT   -> TV | TAG
+ * UNT   -> ALL | TV | TAG
+ * ALL   -> *
  * TV    -> TAG:VAL
  * TAG   -> KEB
  * VAL   -> KEB

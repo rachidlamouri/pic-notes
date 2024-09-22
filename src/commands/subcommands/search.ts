@@ -4,6 +4,7 @@ import { DifferenceNode } from '../../search-ql/nodes/differenceNode';
 import { ExpressionNode } from '../../search-ql/nodes/expressionNode';
 import { IntersectionNode } from '../../search-ql/nodes/intersectionNode';
 import { OperationNode } from '../../search-ql/nodes/operationNode';
+import { SelectAllNode } from '../../search-ql/nodes/selectAllNode';
 import { TagNode } from '../../search-ql/nodes/tagNode';
 import { UnionNode } from '../../search-ql/nodes/unionNode';
 import { parse } from '../../search-ql/parser';
@@ -24,6 +25,16 @@ export class Search extends Command<CommandName.Search> {
     const rootNode = parse(query);
 
     const compute = (node: ExpressionNode): IdSet => {
+      if (node instanceof SelectAllNode) {
+        const matchingIdList = Object.values(
+          this.metadataManager.data.metaById,
+        ).map((meta) => {
+          return meta.id;
+        });
+
+        return new IdSet(matchingIdList);
+      }
+
       if (node instanceof TagNode) {
         const matchingIdSet = this.metadataManager.getIds(node.tag);
         const matchingMetaList = [...matchingIdSet]

@@ -1,4 +1,5 @@
 export enum NodeName {
+  SelectAll = 'SelectAll',
   Tag = 'Tag',
   Intersection = 'Intersection',
   Union = 'Union',
