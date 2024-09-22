@@ -23,9 +23,9 @@ export class Tag extends Command<CommandName.Tag> {
       positionals,
       options: {
         latest,
-        untag: untagList,
-        tags: inputTagList,
-        ids: inputIdList,
+        untag: untagList = [],
+        tags: inputTagList = [],
+        ids: inputIdList = [],
       },
     } = parseArgs({
       args: commandArgs,

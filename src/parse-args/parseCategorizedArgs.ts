@@ -65,7 +65,7 @@ export const parseCategorizedArgs = <
   const options = optionConfigs
     .filter((config) => {
       const option = categorizedArgOptionMap.get(config.name);
-      return config.type !== ParseableType.StringList || option !== undefined;
+      return option !== undefined || config.type === ParseableType.Boolean;
     })
     .map<ParsedOption>((config) => {
       const option = categorizedArgOptionMap.get(config.name);

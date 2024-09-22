@@ -7,6 +7,7 @@ import { OptionConfig } from './optionConfig';
 import { ParsedOption } from './parsedOption';
 import { ParsedPositional } from './parsedPositional';
 import { PositionalConfig } from './positionalConfig';
+import { ParseableType } from './parseableType';
 
 export type ParsedArgs<
   TPositionalConfigs extends readonly PositionalConfig[],
@@ -29,10 +30,17 @@ export type ParsedArgs<
     UnionToIntersection<
       {
         [TIndex in keyof TOptionConfigs]: {
-          [TName in TOptionConfigs[TIndex]['name']]: Extract<
-            ParsedOption,
-            { type: TOptionConfigs[TIndex]['type'] }
-          >['value'];
+          [TName in TOptionConfigs[TIndex]['name']]: TOptionConfigs[TIndex]['type'] extends ParseableType.Boolean
+            ? Extract<
+                ParsedOption,
+                { type: TOptionConfigs[TIndex]['type'] }
+              >['value']
+            :
+                | Extract<
+                    ParsedOption,
+                    { type: TOptionConfigs[TIndex]['type'] }
+                  >['value']
+                | undefined;
         };
       }[number]
     >

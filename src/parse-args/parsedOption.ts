@@ -21,7 +21,7 @@ export type ParsedStringList = {
 export type ParsedNumberOption = {
   type: ParseableType.Number;
   name: string;
-  value: number | undefined;
+  value: number;
 };
 
 export type ParsedOption =
