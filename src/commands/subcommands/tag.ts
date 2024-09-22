@@ -16,6 +16,8 @@ export class Tag extends Command<CommandName.Tag> {
     '--latest <tag1> [, <tag2> [, ...<tagN>]]',
     '<id> [<tag1> , <tag2> [, ...<tagN>]] --untag <tagA> [, <tagB> [, ...<tagC>]]',
     '--ids [<id1> , <id2> [, ...<idN>]] --tags <tag1> [, <tag2> [, ...<tagN>]] --untag <tagA> [, <tagB> [, ...<tagZ>]]',
+    '<id> --describe <description>',
+    '<id> --undescribe',
   ];
 
   run(commandArgs: string[]): void {
@@ -26,6 +28,8 @@ export class Tag extends Command<CommandName.Tag> {
         untag: untagList = [],
         tags: inputTagList = [],
         ids: inputIdList = [],
+        describe: description,
+        undescribe,
       },
     } = parseArgs({
       args: commandArgs,
@@ -47,6 +51,14 @@ export class Tag extends Command<CommandName.Tag> {
           name: 'untag',
           type: ParseableType.StringList,
         },
+        {
+          name: 'describe',
+          type: ParseableType.String,
+        },
+        {
+          name: 'undescribe',
+          type: ParseableType.Boolean,
+        },
       ] as const,
     });
 
@@ -56,7 +68,8 @@ export class Tag extends Command<CommandName.Tag> {
       (positionals.length === 0 && !latest && inputIdList.length === 0) ||
       (positionals.length === 0 &&
         inputTagList.length === 0 &&
-        untagList.length === 0)
+        untagList.length === 0) ||
+      (description !== undefined && undescribe)
     ) {
       withExit(1, () => {
         console.log('Invalid input');
@@ -105,6 +118,14 @@ export class Tag extends Command<CommandName.Tag> {
     validIdList.forEach((id) => {
       this.metadataManager.addTags(id, tagList);
       this.metadataManager.removeTags(id, untagList);
+
+      if (description !== undefined) {
+        this.metadataManager.updateDescription(id, description);
+      }
+
+      if (undescribe) {
+        this.metadataManager.updateDescription(id, undefined);
+      }
     });
 
     withExit(

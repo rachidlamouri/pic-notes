@@ -26,6 +26,9 @@ export const printMeta = (meta: Meta, includeDivider = false) => {
   console.log('Id   |', meta.id);
   console.log('File |', meta.filePath);
   console.log('Tags |', tags.map((tag) => tag.serialized).join(', '));
+  if (meta.description !== undefined) {
+    console.log('Desc |', meta.description);
+  }
 
   if (includeDivider) {
     console.log(DIVIDER);

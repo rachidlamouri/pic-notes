@@ -54,12 +54,14 @@ type MetaJson = {
   id: string;
   filePath: string;
   tagSet: TagJson[];
+  description?: string;
 };
 
 export type Meta = {
   id: string;
   filePath: string;
   tagMap: TagMap;
+  description: string | undefined;
 };
 
 export const hasTag = (meta: Meta, tag: Tag) => {
@@ -95,6 +97,9 @@ function assertIsMetaJson(value: unknown): asserts value is MetaJson {
   assertIsString(value.filePath);
   assertIsArray(value.tagSet);
   assertIsTagSetJson(value.tagSet);
+  if (value.description !== undefined) {
+    assertIsString(value.description);
+  }
 }
 
 type MetadataJson = {
@@ -142,6 +147,7 @@ export class MetadataManager {
           id: pic.id,
           filePath: pic.filePath,
           tagMap: data.metaById[pic.id]?.tagMap ?? new TagMap(),
+          description: data.metaById[pic.id]?.description,
         };
         return [pic.id, guaranteedMeta];
       }),
@@ -219,7 +225,7 @@ export class MetadataManager {
     const modifiedMetaById: Metadata['metaById'] = Object.fromEntries(
       Object.entries(data.metaById).map(([id, metaJson]) => {
         assertIsMetaJson(metaJson);
-        const { tagSet, ...submeta } = metaJson;
+        const { tagSet, description, ...submeta } = metaJson;
         return [
           id,
           {
@@ -233,6 +239,7 @@ export class MetadataManager {
                 return [tag.name, tag];
               }),
             ),
+            description,
           } satisfies Meta,
         ];
       }),
@@ -302,6 +309,7 @@ export class MetadataManager {
 
               return [tag.name, tag.value];
             }),
+          description: meta.description,
         };
         return [id, metaJson];
       }),
@@ -355,6 +363,13 @@ export class MetadataManager {
     tagNameList.forEach((tag) => {
       meta.tagMap.delete(tag);
     });
+
+    this.write(this.data);
+  }
+
+  updateDescription(id: string, description: string | undefined) {
+    const meta = this.getMetaById(id);
+    meta.description = description;
 
     this.write(this.data);
   }
