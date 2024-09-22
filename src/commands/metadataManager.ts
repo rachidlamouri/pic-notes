@@ -375,8 +375,6 @@ export class MetadataManager {
   }
 
   getIds(tag: Tag): IdSet {
-    console.log(this.config.secondaryIndexes);
-
     if (tag.value !== undefined && this.config.secondaryIndexes.has(tag.name)) {
       return this.data.secondaryIndex[tag.serialized] ?? new IdSet();
     }
