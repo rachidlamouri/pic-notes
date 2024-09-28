@@ -1,13 +1,13 @@
 import { ParseableType } from '../../parse-args/parseableType';
 import { parseArgs } from '../../parse-args/parseArgs';
-import { DifferenceNode } from '../../search-ql/nodes/differenceNode';
-import { ExpressionNode } from '../../search-ql/nodes/expressionNode';
-import { IntersectionNode } from '../../search-ql/nodes/intersectionNode';
-import { OperationNode } from '../../search-ql/nodes/operationNode';
-import { SelectAllNode } from '../../search-ql/nodes/selectAllNode';
-import { TagNode } from '../../search-ql/nodes/tagNode';
-import { UnionNode } from '../../search-ql/nodes/unionNode';
-import { parse } from '../../search-ql/parser';
+import { DifferenceNode } from '../../tag-language/nodes/differenceNode';
+import { ExpressionNode } from '../../tag-language/nodes/expressionNode';
+import { IntersectionNode } from '../../tag-language/nodes/intersectionNode';
+import { OperationNode } from '../../tag-language/nodes/operationNode';
+import { SelectAllNode } from '../../tag-language/nodes/selectAllNode';
+import { TagNode } from '../../tag-language/nodes/tagNode';
+import { UnionNode } from '../../tag-language/nodes/unionNode';
+import { parseSearch } from '../../tag-language/searchParser';
 import { assertIsNotUndefined } from '../../utils/assertIsNotUndefined';
 import { Command } from '../command';
 import { CommandName } from '../commandName';
@@ -22,7 +22,7 @@ export class Search extends Command<CommandName.Search> {
   examples = ['tag1 [, tag2 [, ...tagN]]', '--query tag1 + tag2'];
 
   runQuery(query: string) {
-    const rootNode = parse(query);
+    const rootNode = parseSearch(query);
 
     const compute = (node: ExpressionNode): IdSet => {
       if (node instanceof SelectAllNode) {

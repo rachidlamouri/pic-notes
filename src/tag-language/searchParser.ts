@@ -5,7 +5,6 @@
  */
 
 import P from 'parsimmon';
-import { debug } from '../utils/debug';
 import { TagNode } from './nodes/tagNode';
 import { ExpressionNode } from './nodes/expressionNode';
 import { IntersectionNode } from './nodes/intersectionNode';
@@ -16,59 +15,8 @@ import { DifferenceNode } from './nodes/differenceNode';
 import { Constructor } from 'type-fest';
 import { GenericOperationNode, OperationNode } from './nodes/operationNode';
 import { SelectAllNode } from './nodes/selectAllNode';
-
-const KEBAB = /[0-9a-zA-Z?]+(-[0-9a-zA-Z?]+)*/;
-
-/**
- * Creates a parser that always fails, but calls the given function. Use this in
- * P.alt to log information between alternate parsers
- */
-const tap = (fn: (...args: string[]) => void): P.Parser<never> => {
-  return P((input, i) => {
-    fn(input.charAt(i));
-    return P.makeFailure(i, '');
-  }) as P.Parser<never>;
-};
-
-let indent = 0;
-const indentDebug: typeof console.log = (...args) => {
-  debug(indent.toString().padStart(2, ' '), ' |'.repeat(indent), ...args);
-  if (indent > 30) {
-    throw Error('Possibly infinite recursion detected');
-  }
-};
-
-type ResultType<TParser extends P.Parser<unknown>> =
-  TParser extends P.Parser<infer TResult> ? TResult : never;
-
-/**
- * Adds debug logs to a parser. Logs the following:
- *   - 'T' when a parser is tried
- *   - '_' when a parser finishes but has no data
- *   - 'M' when a parser finishes and has a match
- *   - '--' when a parser finishes and fails to match
- */
-const withIndentDebug = <TResult>(
-  name: string,
-  parser: P.Parser<TResult>,
-): P.Parser<TResult> => {
-  return P.alt<ResultType<typeof parser>>(
-    tap(() => {
-      indent += 1;
-      indentDebug('T', name);
-    }),
-    parser.map((result) => {
-      const letter = result === null ? '_' : 'M';
-      indentDebug(letter, name, '"' + result + '"');
-      indent -= 1;
-      return result;
-    }),
-    tap(() => {
-      indentDebug('--');
-      indent -= 1;
-    }),
-  );
-};
+import { KEBAB } from './tagParser';
+import { withIndentDebug } from './parserUtils';
 
 enum Operator {
   Intersection = '^',
@@ -148,7 +96,7 @@ const associateLeft = ([leftExpression, accumulatedOperation]: [
   return expression;
 };
 
-type Language = {
+type SearchLanguage = {
   expression: ExpressionNode;
   subexpression1: ExpressionNode;
   subexpression1Prime: AccumulatedOperation | null;
@@ -165,9 +113,9 @@ type Language = {
   ε: null;
 };
 
-const language = P.createLanguage<Language>({
+const language = P.createLanguage<SearchLanguage>({
   expression: (l) => {
-    return withIndentDebug<Language['expression']>(
+    return withIndentDebug<SearchLanguage['expression']>(
       'exp',
       P.seq(
         // -
@@ -181,7 +129,7 @@ const language = P.createLanguage<Language>({
     );
   },
   subexpression1: (l) => {
-    return withIndentDebug<Language['subexpression1']>(
+    return withIndentDebug<SearchLanguage['subexpression1']>(
       'exp1',
       P.seq(
         // -
@@ -203,7 +151,7 @@ const language = P.createLanguage<Language>({
   subexpression1Prime: (l) => {
     return withIndentDebug(
       "exp1'",
-      P.alt<Language['subexpression1Prime']>(
+      P.alt<SearchLanguage['subexpression1Prime']>(
         P.seq(
           // -
           P.optWhitespace,
@@ -234,72 +182,8 @@ const language = P.createLanguage<Language>({
       ),
     );
   },
-  //   return withIndentDebug<Language['subexpression2']>(
-  //     'exp2',
-  //     P.seq(
-  //       // -
-  //       l.subexpression3,
-  //       l.subexpression2Prime,
-  //     ).map((result) => {
-  //       const subexpression3 = result[0];
-  //       const subexpression2Prime = result[1];
-
-  //       if (subexpression2Prime === null) {
-  //         return subexpression3;
-  //       }
-
-  //       const associateLeft = ([
-  //         leftExpression,
-  //         rightData,
-  //       ]: RightRecursiveTuple): ExpressionNode => {
-  //         if (isRightRecursiveTuple(rightData)) {
-  //           const [rightExpressionA, rightExpressionB] = rightData;
-  //           const union = new UnionNode(leftExpression, rightExpressionA);
-  //           const expression = associateLeft([union, rightExpressionB]);
-  //           return expression;
-  //         }
-
-  //         if (hasExactlyOne(rightData)) {
-  //           const [rightExpression] = rightData;
-  //           const expression = new UnionNode(leftExpression, rightExpression);
-  //           return expression;
-  //         }
-
-  //         throw new Error('Unreachable');
-  //       };
-
-  //       const expression = associateLeft([subexpression3, subexpression2Prime]);
-  //       return expression;
-  //     }),
-  //   );
-  // },
-  // subexpression2Prime: (l) => {
-  //   return withIndentDebug(
-  //     "exp2'",
-  //     P.alt<Language['subexpression2Prime']>(
-  //       P.seq(
-  //         // -
-  //         P.optWhitespace,
-  //         P.string('+'),
-  //         P.optWhitespace,
-  //         l.subexpression3,
-  //         l.subexpression2Prime,
-  //       ).map((result) => {
-  //         const subexpression3 = result[3];
-  //         const subexpression2Prime = result[4];
-
-  //         if (subexpression2Prime === null) {
-  //           return [subexpression3];
-  //         }
-
-  //         return [subexpression3, subexpression2Prime];
-  //       }),
-  //       l.ε,
-  //     ),
-  //   );
-  // },
   subexpression2: (l) => {
-    return withIndentDebug<Language['subexpression2']>(
+    return withIndentDebug<SearchLanguage['subexpression2']>(
       'exp3',
       P.seq(
         // -
@@ -321,7 +205,7 @@ const language = P.createLanguage<Language>({
   subexpression2Prime: (l) => {
     return withIndentDebug(
       "exp3'",
-      P.alt<Language['subexpression2Prime']>(
+      P.alt<SearchLanguage['subexpression2Prime']>(
         P.seq(
           // -
           P.optWhitespace,
@@ -351,7 +235,7 @@ const language = P.createLanguage<Language>({
   subexpression3: (l) => {
     return withIndentDebug(
       'exp4',
-      P.alt<Language['subexpression3']>(
+      P.alt<SearchLanguage['subexpression3']>(
         // -
         P.seq(
           P.string('('),
@@ -367,7 +251,7 @@ const language = P.createLanguage<Language>({
     );
   },
   subexpression4: (l) => {
-    return withIndentDebug<Language['subexpression4']>(
+    return withIndentDebug<SearchLanguage['subexpression4']>(
       // -
       'exp5',
       l.unit,
@@ -376,7 +260,7 @@ const language = P.createLanguage<Language>({
   unit: (l) => {
     return withIndentDebug(
       'unt',
-      P.alt<Language['unit']>(
+      P.alt<SearchLanguage['unit']>(
         // -
         l.selectAll,
         l.taggedValue,
@@ -385,7 +269,7 @@ const language = P.createLanguage<Language>({
     );
   },
   selectAll: (l) => {
-    return withIndentDebug<Language['selectAll']>(
+    return withIndentDebug<SearchLanguage['selectAll']>(
       'all',
       P.string('*').map(() => {
         return new SelectAllNode();
@@ -393,7 +277,7 @@ const language = P.createLanguage<Language>({
     );
   },
   taggedValue: (l) => {
-    return withIndentDebug<Language['taggedValue']>(
+    return withIndentDebug<SearchLanguage['taggedValue']>(
       'tv',
       P.seq(
         // -
@@ -408,7 +292,7 @@ const language = P.createLanguage<Language>({
     );
   },
   tag: (l) => {
-    return withIndentDebug<Language['tag']>(
+    return withIndentDebug<SearchLanguage['tag']>(
       // -
       'tag',
       l.kebab.map((tagName) => {
@@ -417,7 +301,7 @@ const language = P.createLanguage<Language>({
     );
   },
   value: (l) => {
-    return withIndentDebug<Language['value']>(
+    return withIndentDebug<SearchLanguage['value']>(
       // -
       'val',
       l.kebab,
@@ -431,6 +315,6 @@ const language = P.createLanguage<Language>({
   },
 });
 
-export const parse = (input: string) => {
+export const parseSearch = (input: string) => {
   return language.expression.tryParse(input);
 };

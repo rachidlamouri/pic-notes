@@ -2,13 +2,13 @@ import { TagNode } from './nodes/tagNode';
 import { IntersectionNode } from './nodes/intersectionNode';
 import { UnionNode } from './nodes/unionNode';
 import { DifferenceNode } from './nodes/differenceNode';
-import { parse } from './parser';
+import { parseSearch } from './searchParser';
 import assert from 'assert';
 import { SelectAllNode } from './nodes/selectAllNode';
 
 console.log('• Testing select all');
 {
-  const result = parse('*');
+  const result = parseSearch('*');
   assert.deepEqual(
     // -
     result,
@@ -18,7 +18,7 @@ console.log('• Testing select all');
 
 console.log('• Testing tag');
 {
-  const result = parse('a');
+  const result = parseSearch('a');
   assert.deepEqual(
     // -
     result,
@@ -28,7 +28,7 @@ console.log('• Testing tag');
 
 console.log('• Testing tagged value');
 {
-  const result = parse('a:b');
+  const result = parseSearch('a:b');
   assert.deepEqual(
     // -
     result,
@@ -38,7 +38,7 @@ console.log('• Testing tagged value');
 
 console.log('• Parenthesis');
 {
-  const result = parse('(a)');
+  const result = parseSearch('(a)');
   assert.deepEqual(
     // -
     result,
@@ -48,7 +48,7 @@ console.log('• Parenthesis');
 
 console.log('• Testing intersection operator');
 {
-  const result = parse('a ^ b');
+  const result = parseSearch('a ^ b');
   assert.deepEqual(
     result,
     new IntersectionNode(
@@ -61,7 +61,7 @@ console.log('• Testing intersection operator');
 
 console.log('• Testing intersection associativity');
 {
-  const result = parse('a ^ b ^ c');
+  const result = parseSearch('a ^ b ^ c');
   assert.deepEqual(
     result,
     new IntersectionNode(
@@ -77,7 +77,7 @@ console.log('• Testing intersection associativity');
 
 console.log('• Testing union operator');
 {
-  const result = parse('a + b');
+  const result = parseSearch('a + b');
   assert.deepEqual(
     result,
     new UnionNode(
@@ -90,7 +90,7 @@ console.log('• Testing union operator');
 
 console.log('• Testing union associativity');
 {
-  const result = parse('a + b + c');
+  const result = parseSearch('a + b + c');
   assert.deepEqual(
     result,
     new UnionNode(
@@ -106,7 +106,7 @@ console.log('• Testing union associativity');
 
 console.log('• Testing difference operator');
 {
-  const result = parse('a - b');
+  const result = parseSearch('a - b');
   assert.deepEqual(
     result,
     new DifferenceNode(
@@ -119,7 +119,7 @@ console.log('• Testing difference operator');
 
 console.log('• Testing difference associativity');
 {
-  const result = parse('a - b - c');
+  const result = parseSearch('a - b - c');
   assert.deepEqual(
     result,
     new DifferenceNode(
@@ -135,7 +135,7 @@ console.log('• Testing difference associativity');
 
 console.log('• Testing precedence ( ^ + - )');
 {
-  const result = parse('a ^ b + c - d');
+  const result = parseSearch('a ^ b + c - d');
   assert.deepEqual(
     result,
     new DifferenceNode(
@@ -154,7 +154,7 @@ console.log('• Testing precedence ( ^ + - )');
 
 console.log('• Testing precedence ( ^ - + )');
 {
-  const result = parse('a ^ b - c + d');
+  const result = parseSearch('a ^ b - c + d');
   assert.deepEqual(
     result,
     new UnionNode(
@@ -173,7 +173,7 @@ console.log('• Testing precedence ( ^ - + )');
 
 console.log('• Testing precedence ( + ^ - )');
 {
-  const result = parse('a + b ^ c - d');
+  const result = parseSearch('a + b ^ c - d');
   assert.deepEqual(
     result,
     new DifferenceNode(
@@ -192,7 +192,7 @@ console.log('• Testing precedence ( + ^ - )');
 
 console.log('• Testing precedence ( + - ^ )');
 {
-  const result = parse('a + b - c ^ d');
+  const result = parseSearch('a + b - c ^ d');
   assert.deepEqual(
     result,
     new DifferenceNode(
@@ -212,7 +212,7 @@ console.log('• Testing precedence ( + - ^ )');
 
 console.log('• Testing precedence ( - ^ + )');
 {
-  const result = parse('a - b ^ c + d');
+  const result = parseSearch('a - b ^ c + d');
   assert.deepEqual(
     result,
     new UnionNode(
@@ -231,7 +231,7 @@ console.log('• Testing precedence ( - ^ + )');
 
 console.log('• Testing precedence ( - + ^ )');
 {
-  const result = parse('a - b + c ^ d');
+  const result = parseSearch('a - b + c ^ d');
   assert.deepEqual(
     result,
     new UnionNode(
@@ -251,7 +251,7 @@ console.log('• Testing precedence ( - + ^ )');
 
 console.log('• Testing parenthesis precedence');
 {
-  const result = parse('(a - b) ^ (c + d)');
+  const result = parseSearch('(a - b) ^ (c + d)');
   assert.deepEqual(
     result,
     new IntersectionNode(
@@ -271,7 +271,7 @@ console.log('• Testing parenthesis precedence');
 
 console.log('• Testing nested parenthesis precedence');
 {
-  const result = parse('(a + (b - c) + d)');
+  const result = parseSearch('(a + (b - c) + d)');
   assert.deepEqual(
     result,
     new UnionNode(
