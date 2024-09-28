@@ -1,62 +1,166 @@
 /**
  * Key
  *
- * TOP: Root
- * EXP: Expression
- * UNT: Unit
- * ALL: Select all
- * TV : Tagged Value
- * TAG: Tag
- * VAL: Value
- * KEB: Kebab
- * EMP: Empty String
+ * Search Nonterminals
+ * SRCH: Search
+ * SEXP: Search Expression
+ * SUO : Search Unit Operation
+ * SUNT: Search Unit
+ * SALL: Search Select All
+ * SO  : Search Operation
+ * SEXV: Exact Value Unit Search Operation
+ * SALV: Contains All Values Search Operation
+ * SANV: Contains Any Value Search Operation
+ * SEV : Is Empty Value Unit Search Operation
  *
- * Operators
+ * Modification Nonterminals
+ * MOD : Tag Modification
+ * MUNT: Tag Modification Unit
+ * MO  : Tag Modification Operation
+ * MAT : Add Tag Operation
+ * MSSV: Soft Set Tag Value Operation
+ * MHSV: Hard Set Tag Value Operation
+ * MAV : Add Value Unit Operation
+ * MRV : Remove Value Unit Operation
+ *
+ * Shared Nonterminals
+ * TAG : Tag
+ * TN  : Tag Name
+ * TVU : Tag Value Unit
+ * TEV : Tag Empty Value
+ * TVL : Tag Value List
+ * TVLE: Tag Value List Expression
+ * TV  : Tag Value
+ * KEB : Kebab
+ * ε   : Empty String
+ *
+ * Search Unit Operators
  * ^: Intersection
  * +: Union
  * -: Difference
+ *
+ * Search Tag Operators
+ * := __ SEXV __ Has exact value unit and only those values (order does not matter)
+ * :^ __ SALV __ Has all values in value unit
+ * :~ __ SANV __ Value list has at least one value
+ * :! __ SEMV __ Value list is empty
+ *
+ * Tag Modification Operators
+ * :   __ MSSV __ Soft set value list
+ * :!  __ MSSV __ Soft set value list to empty list
+ * :=  __ MHSV __ Hard set value list
+ * :=! __ MHSV __ Hard set value list to empty list
+ * :+  __ MAV  __ Add value unit to value list
+ * :-  __ MRV  __ Remove value unit from value list
+ *
  */
 
 /**
  * Ambiguous Grammar
  *
- * EXP -> (EXP) | EXP ^ EXP | EXP + EXP | EXP - EXP | ALL | TV | TAG
+ * Search Operator Precedence: Parenthesis, intersection, (union, difference)
+ * Search Operator Associativity Associativity: left for all operators
  *
- * Precedence: Parenthesis, intersection, union, difference
+ * Search
+ * SRCH -> SEXP | ε
+ * SEXP -> (SEXP) | SEXP ^ SEXP | SEXP + SEXP | SEXP - SEXP | SUNT
+ * SUNT -> SALL | SUO | TAG
+ * SALL -> *
+ * SUO  -> SEXV | SALV | SANV | SEMV
+ * SEXV -> TN:=TVU
+ * SALV -> TN:^TVU
+ * SANV -> TN:~TVU
+ * SEMV -> TN:!
  *
- * Associativity: left for all operators
+ * Modification
+ * MOD  -> MUNT | ε
+ * MUNT -> MO | TAG
+ * MO   -> ATO | SSVO | HSVO | AVO | RVO
+ * MAT  -> TN
+ * MSSV -> TN:! | TN:TVU
+ * MHSV -> TN:=! | T:=TVU
+ * MAV  -> TN:+TVU
+ * MRV  -> TN:-TVU
+ *
+ * Shared
+ * TAG  -> TN | TN:TVU
+ * TN   -> KEB
+ * TVU  -> ! | TVL | TV | ε
+ * TVL  -> \[ TVLE \]
+ * TVLE -> TV \s TV | TV | ε
+ * TV   -> KEB
  */
 
 /**
  * Unambiguous Left Recursive Grammar
  *
- * TOP  -> EXP1
- * EXP1 -> EXP1 [+-] EXP2 | EXP2
- * EXP2 -> EXP2 ^ EXP3 | EXP3
- * EXP3 -> ( EXP1 ) | EXP4
- * EXP4 -> UNT
- * UNT  -> ALL | TV | TAG
- * ALL  -> *
- * TV   -> TAG:VAL
- * TAG  -> KEB
- * VAL  -> KEB
- * KEB  -> [0-9a-zA-Z?]+(-[0-9a-zA-Z?]+)*
+ * Search
+ * SRCH  -> SEXP1 | ε
+ * SEXP1 -> SEXP1 [+-] SEXP2 | SEXP2
+ * SEXP2 -> SEXP2 ^ SEXP3 | SEXP3
+ * SEXP3 -> ( SEXP1 ) | SEXP4
+ * SEXP4 -> SUNT
+ * SUNT  -> SALL | SUO | TAG
+ * SALL  -> *
+ * SUO  -> SEXV | SALV | SANV | SEMV
+ * SEXV -> TN:=TVU
+ * SALV -> TN:^TVU
+ * SANV -> TN:~TVU
+ * SEMV -> TN:!
+ *
+ * Modification
+ * MOD  -> MUNT | ε
+ * MUNT -> MO | TAG
+ * MO   -> ATO | SSVO | HSVO | AVO | RVO
+ * MAT  -> TN
+ * MSSV -> TN:! | TN:TVU
+ * MHSV -> TN:=! | T:=TVU
+ * MAV  -> TN:+TVU
+ * MRV  -> TN:-TVU
+ *
+ * Shared
+ * TAG  -> TN | TN:TVU
+ * TN   -> KEB
+ * TVU  -> ! | TVL | TV | ε
+ * TVL  -> \[ TVLE \]
+ * TVLE -> TV \s TV | TV | ε
+ * TV   -> KEB
  */
 
 /**
  * Unambiguous Right Recursive Grammar
  *
- * TOP   -> EXP1
+ * Search
+ * SRC   -> EXP1 | ε
  * EXP1  -> EXP2 EXP1'
  * EXP1' -> [+-] EXP2 EXP1' | ε
  * EXP2  -> EXP3 EXP2'
  * EXP2' -> ^ EXP3 EXP2' | ε
  * EXP3  -> ( EXP1 ) | EXP4
- * EXP4  -> UNT
- * UNT   -> ALL | TV | TAG
- * ALL   -> *
- * TV    -> TAG:VAL
- * TAG   -> KEB
- * VAL   -> KEB
- * KEB   -> [0-9a-zA-Z?]+(-[0-9a-zA-Z?]+)*
+ * EXP4  -> SUNT
+ * SUNT  -> SALL | SUO | TAG
+ * SALL  -> *
+ * SUO  -> SEXV | SALV | SANV | SEMV
+ * SEXV -> TN:=TVU
+ * SALV -> TN:^TVU
+ * SANV -> TN:~TVU
+ * SEMV -> TN:!
+ *
+ * Modification
+ * MOD  -> MUNT | ε
+ * MUNT -> MO | TAG
+ * MO   -> ATO | SSVO | HSVO | AVO | RVO
+ * MAT  -> TN
+ * MSSV -> TN:! | TN:TVU
+ * MHSV -> TN:=! | T:=TVU
+ * MAV  -> TN:+TVU
+ * MRV  -> TN:-TVU
+ *
+ * Shared
+ * TAG  -> TN | TN:TVU
+ * TN   -> KEB
+ * TVU  -> ! | TVL | TV | ε
+ * TVL  -> \[ TVLE \]
+ * TVLE -> TV \s TV | TV | ε
+ * TV   -> KEB
  */
