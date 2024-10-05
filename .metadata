@@ -3,1970 +3,1690 @@
     "24-08-23:001-132": {
       "id": "24-08-23:001-132",
       "filePath": "./pics/2024-08-23_00-11-32.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "remove-all-tags-from-map"
         ],
-        "key",
-        "legend",
-        "map",
-        [
-          "purpose",
+        "key": [],
+        "legend": [],
+        "map": [],
+        "purpose": [
           "legend"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-08-23:002-703": {
       "id": "24-08-23:002-703",
       "filePath": "./pics/2024-08-23_00-27-03.png",
-      "tagSet": [
-        "church",
-        [
-          "region",
+      "tagMap": {
+        "church": [],
+        "region": [
           "liurnia"
         ],
-        "unexplored",
-        "unknown"
-      ]
+        "unexplored": [],
+        "unknown": []
+      }
     },
     "24-08-24:093-130": {
       "id": "24-08-24:093-130",
       "filePath": "./pics/2024-08-24_09-31-30.png",
-      "tagSet": [
-        "boss",
-        [
-          "grace",
+      "tagMap": {
+        "boss": [],
+        "grace": [
           "ainsel-river-main"
         ],
-        [
-          "region",
+        "region": [
           "underground"
         ],
-        "undefeated"
-      ]
+        "undefeated": []
+      }
     },
     "24-08-24:094-236": {
       "id": "24-08-24:094-236",
       "filePath": "./pics/2024-08-24_09-42-36.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "ainsel-river-main"
         ],
-        [
-          "region",
+        "region": [
           "underground"
         ],
-        "unexplored"
-      ]
+        "unexplored": []
+      }
     },
     "24-08-26:014-456": {
       "id": "24-08-26:014-456",
       "filePath": "./pics/2024-08-26_01-44-56.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-08-26:021-332": {
       "id": "24-08-26:021-332",
       "filePath": "./pics/2024-08-26_02-13-32.png",
-      "tagSet": [
-        [
-          "level",
+      "tagMap": {
+        "level": [
           "115"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-08-27:002-859": {
       "id": "24-08-27:002-859",
       "filePath": "./pics/2024-08-27_00-28-59.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-08-27:003-004": {
       "id": "24-08-27:003-004",
       "filePath": "./pics/2024-08-27_00-30-04.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-08-27:003-228": {
       "id": "24-08-27:003-228",
       "filePath": "./pics/2024-08-27_00-32-28.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-08-27:003-229": {
       "id": "24-08-27:003-229",
       "filePath": "./pics/2024-08-27_00-32-29.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-08-27:003-230": {
       "id": "24-08-27:003-230",
       "filePath": "./pics/2024-08-27_00-32-30.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-08-27:003-445": {
       "id": "24-08-27:003-445",
       "filePath": "./pics/2024-08-27_00-34-45.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-08-27:003-641": {
       "id": "24-08-27:003-641",
       "filePath": "./pics/2024-08-27_00-36-41.png",
-      "tagSet": [
-        "boss",
-        [
-          "location",
+      "tagMap": {
+        "boss": [],
+        "location": [
           "farum"
         ],
-        [
-          "region",
+        "region": [
           "dragonbarrow"
         ],
-        "undefeated"
-      ]
+        "undefeated": []
+      }
     },
     "24-09-02:145-853": {
       "id": "24-09-02:145-853",
       "filePath": "./pics/2024-09-02_14-58-53.png",
-      "tagSet": [
-        [
-          "location",
+      "tagMap": {
+        "location": [
           "morne-tunnel"
         ],
-        [
-          "material",
+        "material": [
           "smithing-stone"
         ],
-        "mine",
-        [
-          "region",
+        "mine": [],
+        "region": [
           "weeping-peninsula"
         ],
-        [
-          "smithing-stone",
+        "smithing-stone": [
           "1"
         ]
-      ]
+      }
     },
     "24-09-02:183-737": {
       "id": "24-09-02:183-737",
       "filePath": "./pics/2024-09-02_18-37-37.png",
-      "tagSet": [
-        [
-          "location",
+      "tagMap": {
+        "location": [
           "sellia-crystal-tunnel"
         ],
-        [
-          "material",
+        "material": [
           "cracked-crystal"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-03:013-336": {
       "id": "24-09-03:013-336",
       "filePath": "./pics/2024-09-03_01-33-36.png",
-      "tagSet": [
-        [
-          "knight",
+      "tagMap": {
+        "knight": [
           "sword"
         ],
-        [
-          "location",
+        "location": [
           "stormhill"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:011-444": {
       "id": "24-09-04:011-444",
       "filePath": "./pics/2024-09-04_01-14-44.png",
-      "tagSet": [
-        "bear",
-        "boar",
-        [
-          "location",
+      "tagMap": {
+        "bear": [],
+        "boar": [],
+        "location": [
           "mistwood"
         ],
-        [
-          "material",
+        "material": [
           "hefty-beast-bone"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:020-127": {
       "id": "24-09-04:020-127",
       "filePath": "./pics/2024-09-04_02-01-27.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "fort-haight-west"
         ],
-        [
-          "location",
+        "location": [
           "fort-haight"
         ],
-        [
-          "material",
+        "material": [
           "bloodrose"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:030-947": {
       "id": "24-09-04:030-947",
       "filePath": "./pics/2024-09-04_03-09-47.png",
-      "tagSet": [
-        "and-partisan-and-another-shield",
-        "another-with-shield-through-sending-gate",
-        "FIXME",
-        "FIXME2",
-        [
-          "grace",
+      "tagMap": {
+        "and-partisan-and-another-shield": [],
+        "another-with-shield-through-sending-gate": [],
+        "FIXME": [],
+        "FIXME2": [],
+        "grace": [
           "fort-gael-north"
         ],
-        [
-          "knight",
+        "knight": [
           "sword"
         ],
-        [
-          "location",
+        "location": [
           "fort-gael"
         ],
-        [
-          "material",
+        "material": [
           "smithing-stone"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ],
-        "stone-2-and-3",
-        "sword-and-shield"
-      ]
+        "stone-2-and-3": [],
+        "sword-and-shield": []
+      }
     },
     "24-09-04:032-706": {
       "id": "24-09-04:032-706",
       "filePath": "./pics/2024-09-04_03-27-06.png",
-      "tagSet": [
-        [
-          "location",
+      "tagMap": {
+        "location": [
           "gate-front-ruins"
         ],
-        [
-          "material",
+        "material": [
           "smithing-stone"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ],
-        [
-          "smithing-stone",
+        "smithing-stone": [
           "1"
         ]
-      ]
+      }
     },
     "24-09-04:212-333": {
       "id": "24-09-04:212-333",
       "filePath": "./pics/2024-09-04_21-23-33.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "stormhill"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:212-334": {
       "id": "24-09-04:212-334",
       "filePath": "./pics/2024-09-04_21-23-34.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "stormhill"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:212-335": {
       "id": "24-09-04:212-335",
       "filePath": "./pics/2024-09-04_21-23-35.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "stormhill"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:212-336": {
       "id": "24-09-04:212-336",
       "filePath": "./pics/2024-09-04_21-23-36.png",
-      "tagSet": [
-        "bridge",
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "bridge": [],
+        "explored": [],
+        "location": [
           "stormhill"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:212-337": {
       "id": "24-09-04:212-337",
       "filePath": "./pics/2024-09-04_21-23-37.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "stormhill"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-04:212-338": {
       "id": "24-09-04:212-338",
       "filePath": "./pics/2024-09-04_21-23-38.png",
-      "tagSet": [
-        "castle",
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "castle": [],
+        "explored": [],
+        "location": [
           "stormhill"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-05:004-924": {
       "id": "24-09-05:004-924",
       "filePath": "./pics/2024-09-05_00-49-24.png",
-      "tagSet": [
-        "herd",
-        [
-          "location",
+      "tagMap": {
+        "herd": [],
+        "location": [
           "stormhill"
         ],
-        [
-          "material",
+        "material": [
           "thin-beast-bones"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-05:020-645": {
       "id": "24-09-05:020-645",
       "filePath": "./pics/2024-09-05_02-06-45.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "runes"
         ],
-        [
-          "grace",
+        "grace": [
           "godrick-the-grafted"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "merchant",
+        "merchant": [
           "gatekeeper-gostoc"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-05:025-015": {
       "id": "24-09-05:025-015",
       "filePath": "./pics/2024-09-05_02-50-15.png",
-      "tagSet": [
-        "courtyard-paths",
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "courtyard-paths": [],
+        "explored": [],
+        "grace": [
           "liftside-chamber"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-05:230-132": {
       "id": "24-09-05:230-132",
       "filePath": "./pics/2024-09-05_23-01-32.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "divine-tower-of-limgrave"
         ],
-        [
-          "location",
+        "location": [
           "divine-tower-of-limgrave"
         ],
-        [
-          "material",
+        "material": [
           "flight-pinion"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:000-356": {
       "id": "24-09-06:000-356",
       "filePath": "./pics/2024-09-06_00-03-56.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "summonwater-village"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:011-122": {
       "id": "24-09-06:011-122",
       "filePath": "./pics/2024-09-06_01-11-22.png",
-      "tagSet": [
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "explored": [],
+        "grace": [
           "rampart-tower"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ],
-        "up"
-      ]
+        "up": []
+      }
     },
     "24-09-06:011-312": {
       "id": "24-09-06:011-312",
       "filePath": "./pics/2024-09-06_01-13-12.png",
-      "tagSet": [
-        "down",
-        "elevator",
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "down": [],
+        "elevator": [],
+        "explored": [],
+        "grace": [
           "rampart-tower"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:011-423": {
       "id": "24-09-06:011-423",
       "filePath": "./pics/2024-09-06_01-14-23.png",
-      "tagSet": [
-        "castle-rooftops",
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "castle-rooftops": [],
+        "explored": [],
+        "grace": [
           "rampart-tower"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        "parkour",
-        [
-          "region",
+        "parkour": [],
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:011-510": {
       "id": "24-09-06:011-510",
       "filePath": "./pics/2024-09-06_01-15-10.png",
-      "tagSet": [
-        "castle-walls",
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "castle-walls": [],
+        "explored": [],
+        "grace": [
           "rampart-tower"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:230-749": {
       "id": "24-09-06:230-749",
       "filePath": "./pics/2024-09-06_23-07-49.png",
-      "tagSet": [
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "explored": [],
+        "grace": [
           "liftside-chamber"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:230-855": {
       "id": "24-09-06:230-855",
       "filePath": "./pics/2024-09-06_23-08-55.png",
-      "tagSet": [
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "explored": [],
+        "grace": [
           "liftside-chamber"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:230-919": {
       "id": "24-09-06:230-919",
       "filePath": "./pics/2024-09-06_23-09-19.png",
-      "tagSet": [
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "explored": [],
+        "grace": [
           "liftside-chamber"
         ],
-        [
-          "location",
+        "location": [
           "stormveil-castle"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-06:231-414": {
       "id": "24-09-06:231-414",
       "filePath": "./pics/2024-09-06_23-14-14.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "rogiers-letter"
         ],
-        "quest",
-        [
-          "region",
+        "quest": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-07:000-023": {
       "id": "24-09-07:000-023",
       "filePath": "./pics/2024-09-07_00-00-23.png",
-      "tagSet": [
-        [
-          "faith",
+      "tagMap": {
+        "faith": [
           "protection-of-the-erdtree"
         ],
-        [
-          "level",
+        "level": [
           "120"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-07:010-216": {
       "id": "24-09-07:010-216",
       "filePath": "./pics/2024-09-07_01-02-16.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "pin-cleanup"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-07:010-413": {
       "id": "24-09-07:010-413",
       "filePath": "./pics/2024-09-07_01-04-13.png",
-      "tagSet": [
-        "FIXME",
-        "inaccessible",
-        "incomplete",
-        [
-          "purpose",
+      "tagMap": {
+        "FIXME": [],
+        "inaccessible": [],
+        "incomplete": [],
+        "purpose": [
           "legend"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ],
-        [
-          "search",
+        "search": [
           "\"FIXME + inaccessible + incomplete + undefeated + unexplored + unmapped + unobtained + unopenable + unknown\""
         ],
-        "undefeated",
-        "unexplored",
-        "unknown",
-        "unmapped",
-        "unobtained",
-        "unopenable"
-      ],
+        "undefeated": [],
+        "unexplored": [],
+        "unknown": [],
+        "unmapped": [],
+        "unobtained": [],
+        "unopenable": []
+      },
       "description": "Negative search keywords"
     },
     "24-09-07:011-145": {
       "id": "24-09-07:011-145",
       "filePath": "./pics/2024-09-07_01-11-45.png",
-      "tagSet": [
-        [
-          "complete",
+      "tagMap": {
+        "complete": [
           "transfer-notes"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-07:015-605": {
       "id": "24-09-07:015-605",
       "filePath": "./pics/2024-09-07_01-56-05.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "tag-merchants"
         ],
-        [
-          "region",
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-07:020-129": {
       "id": "24-09-07:020-129",
       "filePath": "./pics/2024-09-07_02-01-29.png",
-      "tagSet": [
-        "material",
-        [
-          "purpose",
+      "tagMap": {
+        "material": [],
+        "purpose": [
           "searchable-keywords"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:130-959": {
       "id": "24-09-08:130-959",
       "filePath": "./pics/2024-09-08_13-09-59.png",
-      "tagSet": [
-        [
-          "location",
+      "tagMap": {
+        "location": [
           "church-of-dragon-communion"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "limgrave"
         ]
-      ]
+      }
     },
     "24-09-08:131-442": {
       "id": "24-09-08:131-442",
       "filePath": "./pics/2024-09-08_13-14-42.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "dragon-heart"
         ],
-        [
-          "ekzykes-decay",
+        "ekzykes-decay": [
           "2"
         ],
-        [
-          "location",
+        "location": [
           "cathedral-of-dragon-communion"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ],
-        [
-          "rotten-breath",
+        "rotten-breath": [
           "1"
         ],
-        [
-          "smarags-glintstone-breath",
+        "smarags-glintstone-breath": [
           "2"
         ],
-        "unobtained"
-      ]
+        "unobtained": []
+      }
     },
     "24-09-08:141-329": {
       "id": "24-09-08:141-329",
       "filePath": "./pics/2024-09-08_14-13-29.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "test-ashes"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:150-100": {
       "id": "24-09-08:150-100",
       "filePath": "./pics/2024-09-08_15-01-00.png",
-      "tagSet": [
-        "in-game-notes",
-        [
-          "incomplete",
+      "tagMap": {
+        "in-game-notes": [],
+        "incomplete": [
           "review-notes"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:150-716": {
       "id": "24-09-08:150-716",
       "filePath": "./pics/2024-09-08_15-07-16.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "find-painting-and-artist"
         ],
-        "redmane-painting",
-        [
-          "region",
+        "redmane-painting": [],
+        "region": [
           "global"
         ],
-        "sellia-city",
-        "try-beach-north-of-castle-redmane"
-      ]
+        "sellia-city": [],
+        "try-beach-north-of-castle-redmane": []
+      }
     },
     "24-09-08:151-045": {
       "id": "24-09-08:151-045",
       "filePath": "./pics/2024-09-08_15-10-45.png",
-      "tagSet": [
-        "finger-print-grape",
-        "grape",
-        "grape-lady",
-        [
-          "incomplete",
+      "tagMap": {
+        "finger-print-grape": [],
+        "grape": [],
+        "grape-lady": [],
+        "incomplete": [
           "find-lightseeker-hyetta"
         ],
-        [
-          "person",
+        "person": [
           "lightseeker-hyetta"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:165-018": {
       "id": "24-09-08:165-018",
       "filePath": "./pics/2024-09-08_16-50-18.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "runes"
         ],
-        [
-          "faith",
+        "faith": [
           "protection-of-the-erdtree"
         ],
-        [
-          "level",
+        "level": [
           "121"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:172-917": {
       "id": "24-09-08:172-917",
       "filePath": "./pics/2024-09-08_17-29-17.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "review-key-items"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:173-039": {
       "id": "24-09-08:173-039",
       "filePath": "./pics/2024-09-08_17-30-39.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "find-haligtree-secret-medallion-left"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:182-826": {
       "id": "24-09-08:182-826",
       "filePath": "./pics/2024-09-08_18-28-26.png",
-      "tagSet": [
-        "dragon",
-        "formerly-near-rannis-rise",
-        "glinstone-dragon",
-        [
-          "incomplete",
+      "tagMap": {
+        "dragon": [],
+        "formerly-near-rannis-rise": [],
+        "glinstone-dragon": [],
+        "incomplete": [
           "find-dragon"
         ],
-        "ran-away",
-        [
-          "region",
+        "ran-away": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:183-749": {
       "id": "24-09-08:183-749",
       "filePath": "./pics/2024-09-08_18-37-49.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "find-blaidd"
         ],
-        [
-          "person",
+        "person": [
           "blaidd"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:184-239": {
       "id": "24-09-08:184-239",
       "filePath": "./pics/2024-09-08_18-42-39.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "starlight-shards"
         ],
-        [
-          "location",
+        "location": [
           "seluviss-rise"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ],
-        [
-          "unobtained",
+        "unobtained": [
           "3"
         ]
-      ]
+      }
     },
     "24-09-08:185-823": {
       "id": "24-09-08:185-823",
       "filePath": "./pics/2024-09-08_18-58-23.png",
-      "tagSet": [
-        [
-          "destination",
+      "tagMap": {
+        "destination": [
           "miquellas-haligtree"
         ],
-        [
-          "incomplete",
+        "incomplete": [
           "escort-lattena"
         ],
-        "latena-the-albinauric",
-        "lattena",
-        "quest",
-        [
-          "region",
+        "latena-the-albinauric": [],
+        "lattena": [],
+        "quest": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:194-256": {
       "id": "24-09-08:194-256",
       "filePath": "./pics/2024-09-08_19-42-56.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "table-of-lost-grace"
         ],
-        [
-          "incomplete",
+        "incomplete": [
           "unknown"
         ],
-        "red-tarnished",
-        [
-          "region",
+        "red-tarnished": [],
+        "region": [
           "global"
         ],
-        "unknown"
-      ]
+        "unknown": []
+      }
     },
     "24-09-08:195-049": {
       "id": "24-09-08:195-049",
       "filePath": "./pics/2024-09-08_19-50-49.png",
-      "tagSet": [
-        "black-knifeprint",
-        [
-          "incomplete",
+      "tagMap": {
+        "black-knifeprint": [],
+        "incomplete": [
           "find-knifeprint"
         ],
-        [
-          "location",
+        "location": [
           "black-knife-catacombs"
         ],
-        [
-          "person",
+        "person": [
           "fia"
         ],
-        "quest",
-        [
-          "region",
+        "quest": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-08:201-240": {
       "id": "24-09-08:201-240",
       "filePath": "./pics/2024-09-08_20-12-40.png",
-      "tagSet": [
-        "death-lady-killed-him",
-        [
-          "incomplete",
+      "tagMap": {
+        "death-lady-killed-him": [],
+        "incomplete": [
           "find-dagger-owner"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ],
-        "unknown",
-        "weathered-dagger"
-      ]
+        "unknown": [],
+        "weathered-dagger": []
+      }
     },
     "24-09-08:201-357": {
       "id": "24-09-08:201-357",
       "filePath": "./pics/2024-09-08_20-13-57.png",
-      "tagSet": [
-        "beast-eye",
-        [
-          "known",
+      "tagMap": {
+        "beast-eye": [],
+        "known": [
           "message-saying-it-quivers"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:201-523": {
       "id": "24-09-08:201-523",
       "filePath": "./pics/2024-09-08_20-15-23.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "try-beast-spells"
         ],
-        "inventory",
-        [
-          "region",
+        "inventory": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:201-746": {
       "id": "24-09-08:201-746",
       "filePath": "./pics/2024-09-08_20-17-46.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "try-spells"
         ],
-        "inventory",
-        [
-          "region",
+        "inventory": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-08:201-858": {
       "id": "24-09-08:201-858",
       "filePath": "./pics/2024-09-08_20-18-58.png",
-      "tagSet": [
-        "deathroot",
-        [
-          "grace",
+      "tagMap": {
+        "deathroot": [],
+        "grace": [
           "bestial-sanctum"
         ],
-        [
-          "incomplete",
+        "incomplete": [
           "give-deathroot"
         ],
-        [
-          "location",
+        "location": [
           "bestial-sanctum"
         ],
-        [
-          "person",
+        "person": [
           "gurranq"
         ],
-        [
-          "region",
+        "region": [
           "dragonbarrow"
         ]
-      ]
+      }
     },
     "24-09-08:232-616": {
       "id": "24-09-08:232-616",
       "filePath": "./pics/2024-09-08_23-26-16.png",
-      "tagSet": [
-        "fiery-mountains-in-the-north",
-        [
-          "incomplete",
+      "tagMap": {
+        "fiery-mountains-in-the-north": [],
+        "incomplete": [
           "find-alexander"
         ],
-        [
-          "person",
+        "person": [
           "alexander"
         ],
-        [
-          "region",
+        "region": [
           "gelmir"
         ]
-      ]
+      }
     },
     "24-09-08:234-630": {
       "id": "24-09-08:234-630",
       "filePath": "./pics/2024-09-08_23-46-30.png",
-      "tagSet": [
-        "inaccessible",
-        "pantheon",
-        [
-          "region",
+      "tagMap": {
+        "inaccessible": [],
+        "pantheon": [],
+        "region": [
           "siofra-river"
         ],
-        "unexplored",
-        "unknown"
-      ]
+        "unexplored": [],
+        "unknown": []
+      }
     },
     "24-09-09:003-145": {
       "id": "24-09-09:003-145",
       "filePath": "./pics/2024-09-09_00-31-45.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "farum-greatbridge"
         ],
-        [
-          "region",
+        "region": [
           "dragonbarrow"
         ],
-        [
-          "undefeated",
+        "undefeated": [
           "dragon"
         ]
-      ]
+      }
     },
     "24-09-09:003-306": {
       "id": "24-09-09:003-306",
       "filePath": "./pics/2024-09-09_00-33-06.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "war-dead-catacombs"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-09:005-627": {
       "id": "24-09-09:005-627",
       "filePath": "./pics/2024-09-09_00-56-27.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "runes"
         ],
-        [
-          "level",
+        "level": [
           "122"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-09:011-548": {
       "id": "24-09-09:011-548",
       "filePath": "./pics/2024-09-09_01-15-48.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "sellia-hideaway"
         ],
-        [
-          "incomplete",
+        "incomplete": [
           "break-seal"
         ],
-        [
-          "location",
+        "location": [
           "sellia-hideaway"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ],
-        "seal",
-        "sealbreaker"
-      ]
+        "seal": [],
+        "sealbreaker": []
+      }
     },
     "24-09-09:011-549": {
       "id": "24-09-09:011-549",
       "filePath": "./pics/2024-09-09_01-15-49.png",
-      "tagSet": [
-        [
-          "defeated",
+      "tagMap": {
+        "defeated": [
           "bell-bearing-hunter"
         ],
-        [
-          "grace",
+        "grace": [
           "isolated-merchants-shack"
         ],
-        "night",
-        [
-          "region",
+        "night": [],
+        "region": [
           "dragonbarrow"
         ]
-      ]
+      }
     },
     "24-09-09:014-423": {
       "id": "24-09-09:014-423",
       "filePath": "./pics/2024-09-09_01-44-23.png",
-      "tagSet": [
-        "chest",
-        [
-          "grace",
+      "tagMap": {
+        "chest": [],
+        "grace": [
           "raya-lucaria-grand-library"
         ],
-        [
-          "location",
+        "location": [
           "academy-of-raya-lucaria"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ],
-        "unopenable"
-      ]
+        "unopenable": []
+      }
     },
     "24-09-09:015-639": {
       "id": "24-09-09:015-639",
       "filePath": "./pics/2024-09-09_01-56-39.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "runes"
         ],
-        [
-          "grace",
+        "grace": [
           "table-of-lost-grace"
         ],
-        "obtained",
-        "pidias-bell-bearing",
-        [
-          "region",
+        "obtained": [],
+        "pidias-bell-bearing": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-09:221-228": {
       "id": "24-09-09:221-228",
       "filePath": "./pics/2024-09-09_22-12-28.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "bridge-of-iniquity"
         ],
-        "ladder",
-        [
-          "region",
+        "ladder": [],
+        "region": [
           "gelmir"
         ],
-        "road",
-        "unexplored"
-      ]
+        "road": [],
+        "unexplored": []
+      }
     },
     "24-09-09:222-052": {
       "id": "24-09-09:222-052",
       "filePath": "./pics/2024-09-09_22-20-52.png",
-      "tagSet": [
-        [
-          "incomplete",
+      "tagMap": {
+        "incomplete": [
           "find-grafted"
         ],
-        [
-          "region",
+        "region": [
           "gelmir"
         ],
-        "unknown"
-      ]
+        "unknown": []
+      }
     },
     "24-09-09:222-539": {
       "id": "24-09-09:222-539",
       "filePath": "./pics/2024-09-09_22-25-39.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "erdtree-gazing-hill"
         ],
-        [
-          "location",
+        "location": [
           "wyndham-ruins"
         ],
-        [
-          "region",
+        "region": [
           "altus"
         ],
-        [
-          "undefeated",
+        "undefeated": [
           "tibia-mariner"
         ]
-      ]
+      }
     },
     "24-09-09:223-605": {
       "id": "24-09-09:223-605",
       "filePath": "./pics/2024-09-09_22-36-05.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "erdtree-gazing-hill"
         ],
-        [
-          "incomplete",
+        "incomplete": [
           "find-catacomb"
         ],
-        [
-          "location",
+        "location": [
           "wyndham-ruins"
         ],
-        [
-          "region",
+        "region": [
           "altus"
         ]
-      ]
+      }
     },
     "24-09-09:223-835": {
       "id": "24-09-09:223-835",
       "filePath": "./pics/2024-09-09_22-38-35.png",
-      "tagSet": [
-        [
-          "location",
+      "tagMap": {
+        "location": [
           "sages-cave"
         ],
-        [
-          "region",
+        "region": [
           "altus"
         ]
-      ]
+      }
     },
     "24-09-09:224-709": {
       "id": "24-09-09:224-709",
       "filePath": "./pics/2024-09-09_22-47-09.png",
-      "tagSet": [
-        "dragon",
-        [
-          "grace",
+      "tagMap": {
+        "dragon": [],
+        "grace": [
           "abandoned-coffin"
         ],
-        [
-          "incomplete",
+        "incomplete": [
           "find-dragon"
         ],
-        [
-          "region",
+        "region": [
           "altus"
         ]
-      ]
+      }
     },
     "24-09-09:225-042": {
       "id": "24-09-09:225-042",
       "filePath": "./pics/2024-09-09_22-50-42.png",
-      "tagSet": [
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "explored": [],
+        "grace": [
           "the-four-belfries"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-09:233-609": {
       "id": "24-09-09:233-609",
       "filePath": "./pics/2024-09-09_23-36-09.png",
-      "tagSet": [
-        "explored",
-        [
-          "grace",
+      "tagMap": {
+        "explored": [],
+        "grace": [
           "lake-facing-cliffs"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:011-039": {
       "id": "24-09-10:011-039",
       "filePath": "./pics/2024-09-10_01-10-39.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:011-159": {
       "id": "24-09-10:011-159",
       "filePath": "./pics/2024-09-10_01-11-59.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:011-239": {
       "id": "24-09-10:011-239",
       "filePath": "./pics/2024-09-10_01-12-39.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:011-256": {
       "id": "24-09-10:011-256",
       "filePath": "./pics/2024-09-10_01-12-56.png",
-      "tagSet": [
-        "explored",
-        "lakeside-crystal-cave",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "lakeside-crystal-cave": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:011-326": {
       "id": "24-09-10:011-326",
       "filePath": "./pics/2024-09-10_01-13-26.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "stillwater-cave"
         ],
-        [
-          "material",
+        "material": [
           "miranda-powder"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:235-054": {
       "id": "24-09-10:235-054",
       "filePath": "./pics/2024-09-10_23-50-54.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:235-831": {
       "id": "24-09-10:235-831",
       "filePath": "./pics/2024-09-10_23-58-31.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-10:235-932": {
       "id": "24-09-10:235-932",
       "filePath": "./pics/2024-09-10_23-59-32.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-11:000-104": {
       "id": "24-09-11:000-104",
       "filePath": "./pics/2024-09-11_00-01-04.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-11:000-105": {
       "id": "24-09-11:000-105",
       "filePath": "./pics/2024-09-11_00-01-05.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-11:000-526": {
       "id": "24-09-11:000-526",
       "filePath": "./pics/2024-09-11_00-05-26.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "cliffbottom-catacombs"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-12:005-404": {
       "id": "24-09-12:005-404",
       "filePath": "./pics/2024-09-12_00-54-04.png",
-      "tagSet": [
-        [
-          "location",
+      "tagMap": {
+        "location": [
           "jarburg"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ],
-        "unexplored"
-      ]
+        "unexplored": []
+      }
     },
     "24-09-12:010-920": {
       "id": "24-09-12:010-920",
       "filePath": "./pics/2024-09-12_01-09-20.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "scenic-isle"
         ],
-        [
-          "material",
+        "material": [
           "ruin-fragment"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-12:013-227": {
       "id": "24-09-12:013-227",
       "filePath": "./pics/2024-09-12_01-32-27.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "scenic-isle"
         ],
-        [
-          "material",
+        "material": [
           "glintstone-firefly"
         ],
-        [
-          "region",
+        "region": [
           "liurnia"
         ]
-      ]
+      }
     },
     "24-09-12:024-508": {
       "id": "24-09-12:024-508",
       "filePath": "./pics/2024-09-12_02-45-08.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "runes"
         ],
-        [
-          "level",
+        "level": [
           "123"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-12:235-054": {
       "id": "24-09-12:235-054",
       "filePath": "./pics/2024-09-12_23-50-54.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-12:235-133": {
       "id": "24-09-12:235-133",
       "filePath": "./pics/2024-09-12_23-51-33.png",
-      "tagSet": [
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "explored": [],
+        "location": [
           "minor-erdtree-catacombs"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-12:235-218": {
       "id": "24-09-12:235-218",
       "filePath": "./pics/2024-09-12_23-52-18.png",
-      "tagSet": [
-        "and-stone-3",
-        "explored",
-        "FIXME",
-        [
-          "location",
+      "tagMap": {
+        "and-stone-3": [],
+        "explored": [],
+        "FIXME": [],
+        "location": [
           "gael-tunnnel"
         ],
-        [
-          "material",
+        "material": [
           "smithing-stone"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ],
-        [
-          "smithing-stone",
+        "smithing-stone": [
           "4"
         ]
-      ]
+      }
     },
     "24-09-12:235-303": {
       "id": "24-09-12:235-303",
       "filePath": "./pics/2024-09-12_23-53-03.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-12:235-304": {
       "id": "24-09-12:235-304",
       "filePath": "./pics/2024-09-12_23-53-04.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-20:000-854": {
       "id": "24-09-20:000-854",
       "filePath": "./pics/2024-09-20_00-08-54.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "runes"
         ],
-        [
-          "level",
+        "level": [
           "124"
         ],
-        "obtained",
-        [
-          "region",
+        "obtained": [],
+        "region": [
           "global"
         ]
-      ]
+      }
     },
     "24-09-20:232-710": {
       "id": "24-09-20:232-710",
       "filePath": "./pics/2024-09-20_23-27-10.png",
-      "tagSet": [
-        [
-          "currency",
+      "tagMap": {
+        "currency": [
           "runes"
         ],
-        [
-          "level",
+        "level": [
           "125"
         ],
-        [
-          "region",
+        "region": [
           "global"
         ],
-        [
-          "unobtained",
+        "unobtained": [
           "101k"
         ]
-      ]
+      }
     },
     "24-09-20:234-543": {
       "id": "24-09-20:234-543",
       "filePath": "./pics/2024-09-20_23-45-43.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-20:234-701": {
       "id": "24-09-20:234-701",
       "filePath": "./pics/2024-09-20_23-47-01.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-20:234-855": {
       "id": "24-09-20:234-855",
       "filePath": "./pics/2024-09-20_23-48-55.png",
-      "tagSet": [
-        [
-          "region",
+      "tagMap": {
+        "region": [
           "dragonbarrow"
         ],
-        "unexplored"
-      ]
+        "unexplored": []
+      }
     },
     "24-09-20:235-439": {
       "id": "24-09-20:235-439",
       "filePath": "./pics/2024-09-20_23-54-39.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "dragonbarrow-west"
         ],
-        [
-          "region",
+        "region": [
           "dragonbarrow"
         ],
-        "unexplored",
-        "unmapped"
-      ]
+        "unexplored": [],
+        "unmapped": []
+      }
     },
     "24-09-21:004-026": {
       "id": "24-09-21:004-026",
       "filePath": "./pics/2024-09-21_00-40-26.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "fort-gael-north"
         ],
-        [
-          "material",
+        "material": [
           "arteria-leaf"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-22:143-952": {
       "id": "24-09-22:143-952",
       "filePath": "./pics/2024-09-22_14-39-52.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-22:144-035": {
       "id": "24-09-22:144-035",
       "filePath": "./pics/2024-09-22_14-40-35.png",
-      "tagSet": [
-        [
-          "region",
+      "tagMap": {
+        "region": [
           "caelid"
         ],
-        "unexplored"
-      ]
+        "unexplored": []
+      }
     },
     "24-09-22:144-110": {
       "id": "24-09-22:144-110",
       "filePath": "./pics/2024-09-22_14-41-10.png",
-      "tagSet": [
-        "cave",
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "cave": [],
+        "explored": [],
+        "location": [
           "gaol-cave"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-22:183-452": {
       "id": "24-09-22:183-452",
       "filePath": "./pics/2024-09-22_18-34-52.png",
-      "tagSet": [
-        [
-          "grace",
+      "tagMap": {
+        "grace": [
           "astray-from-caelid-highway-north"
         ],
-        "merchant",
-        [
-          "region",
+        "merchant": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-22:184-818": {
       "id": "24-09-22:184-818",
       "filePath": "./pics/2024-09-22_18-48-18.png",
-      "tagSet": [
-        "cave",
-        "explored",
-        [
-          "location",
+      "tagMap": {
+        "cave": [],
+        "explored": [],
+        "location": [
           "abandoned-cave"
         ],
-        [
-          "region",
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-22:192-126": {
       "id": "24-09-22:192-126",
       "filePath": "./pics/2024-09-22_19-21-26.png",
-      "tagSet": [
-        "explored",
-        [
-          "region",
+      "tagMap": {
+        "explored": [],
+        "region": [
           "caelid"
         ]
-      ]
+      }
     },
     "24-09-22:202-003": {
       "id": "24-09-22:202-003",
       "filePath": "./pics/2024-09-22_20-20-03.png",
-      "tagSet": [
-        [
-          "region",
+      "tagMap": {
+        "region": [
           "caelid"
         ],
-        "unexplored"
-      ]
+        "unexplored": []
+      }
     }
   },
   "primaryIndex": {
