@@ -29,9 +29,9 @@ export class List extends Command<CommandName.List> {
       withExit(1, this.printUsage.bind(this));
     }
 
-    const metaSublist = Object.values(this.metadataManager.data.metaById).slice(
-      -count,
-    );
+    const metaSublist = Object.values(
+      this.metadataManager.metadata.metaById,
+    ).slice(-count);
     withExit(0, printMetaList, metaSublist);
   }
 }

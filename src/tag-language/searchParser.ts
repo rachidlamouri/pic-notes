@@ -1,9 +1,3 @@
-/**
- * @file
- * @note a comment with a single hyphen (// -) forces the formatter to break up
- * the subsequent statements into multiple lines
- */
-
 import P from 'parsimmon';
 import { TagNode } from './nodes/tagNode';
 import { ExpressionNode } from './nodes/expressionNode';
@@ -15,8 +9,15 @@ import { DifferenceNode } from './nodes/differenceNode';
 import { Constructor } from 'type-fest';
 import { GenericOperationNode, OperationNode } from './nodes/operationNode';
 import { SelectAllNode } from './nodes/selectAllNode';
-import { KEBAB } from './tagParser';
-import { withIndentDebug } from './parserUtils';
+import { createLanguage, parserDebugger, ul } from './parserUtils';
+import {
+  GenericSearchOperationNode,
+  SearchOperationNode,
+} from './nodes/search-nodes/searchOperationNode';
+import { HasTagNameOperationNode } from './nodes/search-nodes/lookup-operations/hasTagNameOperationNode';
+import { tl } from './tagParser';
+import { HasAnyTagValueOperationNode } from './nodes/search-nodes/lookup-operations/hasAnyTagValueOperationNode';
+import { bundle } from '@swc/core';
 
 enum Operator {
   Intersection = '^',
@@ -97,224 +98,403 @@ const associateLeft = ([leftExpression, accumulatedOperation]: [
 };
 
 type SearchLanguage = {
-  expression: ExpressionNode;
-  subexpression1: ExpressionNode;
-  subexpression1Prime: AccumulatedOperation | null;
-  subexpression2: ExpressionNode;
-  subexpression2Prime: AccumulatedOperation | null;
-  subexpression3: ExpressionNode;
-  subexpression4: SelectAllNode | TagNode;
-  unit: SelectAllNode | TagNode;
-  selectAll: SelectAllNode;
-  taggedValue: TagNode;
-  tag: TagNode;
-  value: string;
-  kebab: string;
-  ε: null;
+  search: GenericSearchOperationNode | null;
+  // subexpression1: ExpressionNode;
+  // subexpression1Prime: AccumulatedOperation | null;
+  // subexpression2: ExpressionNode;
+  // subexpression2Prime: AccumulatedOperation | null;
+  // subexpression3: ExpressionNode;
+  subexpression4: GenericSearchOperationNode;
+  searchOperation: GenericSearchOperationNode;
+  // selectAllOperation: null;
+  // hasExactValueOperation: null;
+  // hasAllValueOperation: null;
+  hasAnyTagValueOperation: HasAnyTagValueOperationNode;
+  hasTagNameOperation: HasTagNameOperationNode;
+
+  // unit: SelectAllNode | TagNode;
+  // selectAll: SelectAllNode;
+  // taggedValue: TagNode;
+  // tag: TagNode;
+  // value: string;
 };
 
-const language = P.createLanguage<SearchLanguage>({
-  expression: (l) => {
-    return withIndentDebug<SearchLanguage['expression']>(
-      'exp',
-      P.seq(
+// // const searchLanguage = P.createLanguage<SearchLanguage>({
+// //   search: (l) => {
+// //     return withIndentDebug<SearchLanguage['search']>(
+// //       'search',
+// //       P.seq(
+// //         // -
+// //         P.optWhitespace,
+// //         P.alt(
+// //           // -
+// //           l.subexpression1,
+// //           ul.ε,
+// //         ),
+// //         P.optWhitespace,
+// //       ).map((result) => {
+// //         const expression = result[1];
+// //         return expression;
+// //       }),
+// //     );
+// //   },
+// //   expression: (l) => {
+// //     return withIndentDebug<SearchLanguage['expression']>(
+// //       'exp',
+// //       l.subexpression1,
+// //     );
+// //   },
+// //   subexpression1: (l) => {
+// //     return withIndentDebug<SearchLanguage['subexpression1']>(
+// //       'exp1',
+// //       P.seq(
+// //         // -
+// //         l.subexpression2,
+// //         l.subexpression1Prime,
+// //       ).map((result) => {
+// //         const subexpression2: ExpressionNode = result[0];
+// //         const subexpression1Prime: AccumulatedOperation | null = result[1];
+
+// //         if (subexpression1Prime === null) {
+// //           return subexpression2;
+// //         }
+
+// //         const expression = associateLeft([subexpression2, subexpression1Prime]);
+// //         return expression;
+// //       }),
+// //     );
+// //   },
+// //   subexpression1Prime: (l) => {
+// //     return withIndentDebug(
+// //       "exp1'",
+// //       P.alt<SearchLanguage['subexpression1Prime']>(
+// //         P.seq(
+// //           // -
+// //           P.optWhitespace,
+// //           P.alt(
+// //             // -
+// //             P.string(Operator.Union),
+// //             P.string(Operator.Difference),
+// //           ),
+// //           P.optWhitespace,
+// //           l.subexpression2,
+// //           l.subexpression1Prime,
+// //         ).map((result) => {
+// //           const operator = result[1];
+// //           const subexpression2: ExpressionNode = result[3];
+// //           const subexpression1Prime: AccumulatedOperation | null = result[4];
+
+// //           if (subexpression1Prime === null) {
+// //             return [operator, subexpression2] satisfies OperationChainEnd;
+// //           }
+
+// //           return [
+// //             operator,
+// //             subexpression2,
+// //             subexpression1Prime,
+// //           ] satisfies NestedAccumulatedOperation;
+// //         }),
+// //         ul.ε,
+// //       ),
+// //     );
+// //   },
+// //   subexpression2: (l) => {
+// //     return withIndentDebug<SearchLanguage['subexpression2']>(
+// //       'exp3',
+// //       P.seq(
+// //         // -
+// //         l.subexpression3,
+// //         l.subexpression2Prime,
+// //       ).map((result) => {
+// //         const subexpression3: ExpressionNode = result[0];
+// //         const subexpressionPrime: AccumulatedOperation | null = result[1];
+
+// //         if (subexpressionPrime === null) {
+// //           return subexpression3;
+// //         }
+
+// //         const expression = associateLeft([subexpression3, subexpressionPrime]);
+// //         return expression;
+// //       }),
+// //     );
+// //   },
+// //   subexpression2Prime: (l) => {
+// //     return withIndentDebug(
+// //       "exp3'",
+// //       P.alt<SearchLanguage['subexpression2Prime']>(
+// //         P.seq(
+// //           // -
+// //           P.optWhitespace,
+// //           P.string(Operator.Intersection),
+// //           P.optWhitespace,
+// //           l.subexpression3,
+// //           l.subexpression2Prime,
+// //         ).map((result) => {
+// //           const operator = result[1];
+// //           const subexpression3 = result[3];
+// //           const subexpression2Prime = result[4];
+
+// //           if (subexpression2Prime === null) {
+// //             return [operator, subexpression3] satisfies OperationChainEnd;
+// //           }
+
+// //           return [
+// //             operator,
+// //             subexpression3,
+// //             subexpression2Prime,
+// //           ] satisfies NestedAccumulatedOperation;
+// //         }),
+// //         ul.ε,
+// //       ),
+// //     );
+// //   },
+// //   subexpression3: (l) => {
+// //     return withIndentDebug(
+// //       'exp4',
+// //       P.alt<SearchLanguage['subexpression3']>(
+// //         // -
+// //         P.seq(
+// //           P.string('('),
+// //           P.optWhitespace,
+// //           l.subexpression1,
+// //           P.optWhitespace,
+// //           P.string(')'),
+// //         ).map((result) => {
+// //           return result[2];
+// //         }),
+// //         l.subexpression4,
+// //       ),
+// //     );
+// //   },
+// //   subexpression4: (l) => {
+// //     return withIndentDebug<SearchLanguage['subexpression4']>(
+// //       // -
+// //       'exp5',
+// //       l.unit,
+// //     );
+// //   },
+// //   unit: (l) => {
+// //     return withIndentDebug(
+// //       'unt',
+// //       P.alt<SearchLanguage['unit']>(
+// //         // -
+// //         l.selectAll,
+// //         l.taggedValue,
+// //         l.tag,
+// //       ),
+// //     );
+// //   },
+// //   selectAll: (l) => {
+// //     return withIndentDebug<SearchLanguage['selectAll']>(
+// //       'all',
+// //       P.string('*').map(() => {
+// //         return new SelectAllNode();
+// //       }),
+// //     );
+// //   },
+// //   taggedValue: (l) => {
+// //     return withIndentDebug<SearchLanguage['taggedValue']>(
+// //       'tv',
+// //       P.seq(
+// //         // -
+// //         l.tag,
+// //         P.string(':'),
+// //         l.value,
+// //       ).map((result) => {
+// //         const tagName = result[0].tag.name;
+// //         const tagValue = result[2];
+// //         return new TagNode(tagName, tagValue);
+// //       }),
+// //     );
+// //   },
+// //   tag: (l) => {
+// //     return withIndentDebug<SearchLanguage['tag']>(
+// //       // -
+// //       'tag',
+// //       ul.kebab.map((tagName) => {
+// //         return new TagNode(tagName);
+// //       }),
+// //     );
+// //   },
+// //   value: (l) => {
+// //     return withIndentDebug<SearchLanguage['value']>(
+// //       // -
+// //       'val',
+// //       ul.kebab,
+// //     );
+// //   },
+// // });
+
+const searchLanguage = createLanguage<SearchLanguage>(parserDebugger, {
+  search: (l) => {
+    return P.seq(
+      // -
+      P.optWhitespace,
+      P.alt<SearchLanguage['search']>(
         // -
-        P.optWhitespace,
-        l.subexpression1,
-        P.optWhitespace,
-      ).map((result) => {
-        const expression = result[1];
-        return expression;
-      }),
-    );
-  },
-  subexpression1: (l) => {
-    return withIndentDebug<SearchLanguage['subexpression1']>(
-      'exp1',
-      P.seq(
-        // -
-        l.subexpression2,
-        l.subexpression1Prime,
-      ).map((result) => {
-        const subexpression2: ExpressionNode = result[0];
-        const subexpression1Prime: AccumulatedOperation | null = result[1];
-
-        if (subexpression1Prime === null) {
-          return subexpression2;
-        }
-
-        const expression = associateLeft([subexpression2, subexpression1Prime]);
-        return expression;
-      }),
-    );
-  },
-  subexpression1Prime: (l) => {
-    return withIndentDebug(
-      "exp1'",
-      P.alt<SearchLanguage['subexpression1Prime']>(
-        P.seq(
-          // -
-          P.optWhitespace,
-          P.alt(
-            // -
-            P.string(Operator.Union),
-            P.string(Operator.Difference),
-          ),
-          P.optWhitespace,
-          l.subexpression2,
-          l.subexpression1Prime,
-        ).map((result) => {
-          const operator = result[1];
-          const subexpression2: ExpressionNode = result[3];
-          const subexpression1Prime: AccumulatedOperation | null = result[4];
-
-          if (subexpression1Prime === null) {
-            return [operator, subexpression2] satisfies OperationChainEnd;
-          }
-
-          return [
-            operator,
-            subexpression2,
-            subexpression1Prime,
-          ] satisfies NestedAccumulatedOperation;
-        }),
-        l.ε,
-      ),
-    );
-  },
-  subexpression2: (l) => {
-    return withIndentDebug<SearchLanguage['subexpression2']>(
-      'exp3',
-      P.seq(
-        // -
-        l.subexpression3,
-        l.subexpression2Prime,
-      ).map((result) => {
-        const subexpression3: ExpressionNode = result[0];
-        const subexpressionPrime: AccumulatedOperation | null = result[1];
-
-        if (subexpressionPrime === null) {
-          return subexpression3;
-        }
-
-        const expression = associateLeft([subexpression3, subexpressionPrime]);
-        return expression;
-      }),
-    );
-  },
-  subexpression2Prime: (l) => {
-    return withIndentDebug(
-      "exp3'",
-      P.alt<SearchLanguage['subexpression2Prime']>(
-        P.seq(
-          // -
-          P.optWhitespace,
-          P.string(Operator.Intersection),
-          P.optWhitespace,
-          l.subexpression3,
-          l.subexpression2Prime,
-        ).map((result) => {
-          const operator = result[1];
-          const subexpression3 = result[3];
-          const subexpression2Prime = result[4];
-
-          if (subexpression2Prime === null) {
-            return [operator, subexpression3] satisfies OperationChainEnd;
-          }
-
-          return [
-            operator,
-            subexpression3,
-            subexpression2Prime,
-          ] satisfies NestedAccumulatedOperation;
-        }),
-        l.ε,
-      ),
-    );
-  },
-  subexpression3: (l) => {
-    return withIndentDebug(
-      'exp4',
-      P.alt<SearchLanguage['subexpression3']>(
-        // -
-        P.seq(
-          P.string('('),
-          P.optWhitespace,
-          l.subexpression1,
-          P.optWhitespace,
-          P.string(')'),
-        ).map((result) => {
-          return result[2];
-        }),
+        // l.subexpression1,
         l.subexpression4,
+        ul.ε,
       ),
-    );
+      P.optWhitespace,
+    ).map((result) => {
+      const expression = result[1];
+      return expression;
+    });
   },
+  // subexpression1: (l) => {
+  //   return P.seq(
+  //     // -
+  //     l.subexpression2,
+  //     l.subexpression1Prime,
+  //   ).map((result) => {
+  //     const subexpression2: ExpressionNode = result[0];
+  //     const subexpression1Prime: AccumulatedOperation | null = result[1];
+
+  //     if (subexpression1Prime === null) {
+  //       return subexpression2;
+  //     }
+
+  //     const expression = associateLeft([subexpression2, subexpression1Prime]);
+  //     return expression;
+  //   });
+  // },
+  // subexpression1Prime: (l) => {
+  //   return P.alt<SearchLanguage['subexpression1Prime']>(
+  //     P.seq(
+  //       // -
+  //       P.optWhitespace,
+  //       P.alt(
+  //         // -
+  //         P.string(Operator.Union),
+  //         P.string(Operator.Difference),
+  //       ),
+  //       P.optWhitespace,
+  //       l.subexpression2,
+  //       l.subexpression1Prime,
+  //     ).map((result) => {
+  //       const operator = result[1];
+  //       const subexpression2: ExpressionNode = result[3];
+  //       const subexpression1Prime: AccumulatedOperation | null = result[4];
+
+  //       if (subexpression1Prime === null) {
+  //         return [operator, subexpression2] satisfies OperationChainEnd;
+  //       }
+
+  //       return [
+  //         operator,
+  //         subexpression2,
+  //         subexpression1Prime,
+  //       ] satisfies NestedAccumulatedOperation;
+  //     }),
+  //     ul.ε,
+  //   );
+  // },
+  // subexpression2: (l) => {
+  //   return P.seq(
+  //     // -
+  //     l.subexpression3,
+  //     l.subexpression2Prime,
+  //   ).map((result) => {
+  //     const subexpression3: ExpressionNode = result[0];
+  //     const subexpressionPrime: AccumulatedOperation | null = result[1];
+
+  //     if (subexpressionPrime === null) {
+  //       return subexpression3;
+  //     }
+
+  //     const expression = associateLeft([subexpression3, subexpressionPrime]);
+  //     return expression;
+  //   });
+  // },
+  // subexpression2Prime: (l) => {
+  //   return P.alt<SearchLanguage['subexpression2Prime']>(
+  //     P.seq(
+  //       // -
+  //       P.optWhitespace,
+  //       P.string(Operator.Intersection),
+  //       P.optWhitespace,
+  //       l.subexpression3,
+  //       l.subexpression2Prime,
+  //     ).map((result) => {
+  //       const operator = result[1];
+  //       const subexpression3 = result[3];
+  //       const subexpression2Prime = result[4];
+
+  //       if (subexpression2Prime === null) {
+  //         return [operator, subexpression3] satisfies OperationChainEnd;
+  //       }
+
+  //       return [
+  //         operator,
+  //         subexpression3,
+  //         subexpression2Prime,
+  //       ] satisfies NestedAccumulatedOperation;
+  //     }),
+  //     ul.ε,
+  //   );
+  // },
+  // subexpression3: (l) => {
+  //   return P.alt<SearchLanguage['subexpression3']>(
+  //     // -
+  //     P.seq(
+  //       P.string('('),
+  //       P.optWhitespace,
+  //       l.subexpression1,
+  //       P.optWhitespace,
+  //       P.string(')'),
+  //     ).map((result) => {
+  //       return result[2];
+  //     }),
+  //     l.subexpression4,
+  //   );
+  // },
   subexpression4: (l) => {
-    return withIndentDebug<SearchLanguage['subexpression4']>(
-      // -
-      'exp5',
-      l.unit,
+    return l.searchOperation;
+  },
+  searchOperation: (l) => {
+    return P.alt<SearchLanguage['searchOperation']>(
+      l.hasAnyTagValueOperation,
+      l.hasTagNameOperation,
     );
   },
-  unit: (l) => {
-    return withIndentDebug(
-      'unt',
-      P.alt<SearchLanguage['unit']>(
-        // -
-        l.selectAll,
-        l.taggedValue,
-        l.tag,
-      ),
-    );
-  },
-  selectAll: (l) => {
-    return withIndentDebug<SearchLanguage['selectAll']>(
-      'all',
-      P.string('*').map(() => {
-        return new SelectAllNode();
-      }),
-    );
-  },
-  taggedValue: (l) => {
-    return withIndentDebug<SearchLanguage['taggedValue']>(
-      'tv',
+  // selectAll: () => {
+  //   return P.string('*').map(() => {
+  //     return new SelectAllNode();
+  //   });
+  // },
+  hasAnyTagValueOperation: () => {
+    return P.alt<SearchLanguage['hasAnyTagValueOperation']>(
       P.seq(
-        // -
-        l.tag,
-        P.string(':'),
-        l.value,
+        tl.tagName,
+        tl.delimiter,
+        P.alt<string[]>(
+          P.seq(
+            // -
+            P.string('~'),
+            tl.tagValueUnit,
+          ).map((result) => {
+            const tagValueList = result[1];
+            return tagValueList;
+          }),
+          tl.tagValue.map((value) => {
+            return [value];
+          }),
+        ),
       ).map((result) => {
-        const tagName = result[0].tag.name;
-        const tagValue = result[2];
-        return new TagNode(tagName, tagValue);
+        const tagName = result[0];
+        const tagValueList = result[2];
+        return new HasAnyTagValueOperationNode(tagName, tagValueList);
       }),
     );
   },
-  tag: (l) => {
-    return withIndentDebug<SearchLanguage['tag']>(
-      // -
-      'tag',
-      l.kebab.map((tagName) => {
-        return new TagNode(tagName);
-      }),
-    );
-  },
-  value: (l) => {
-    return withIndentDebug<SearchLanguage['value']>(
-      // -
-      'val',
-      l.kebab,
-    );
-  },
-  kebab: () => {
-    return P.regex(KEBAB);
-  },
-  ε: () => {
-    return P.string('').result(null);
+  hasTagNameOperation: () => {
+    return tl.tagName.map((tagName) => {
+      return new HasTagNameOperationNode(tagName);
+    });
   },
 });
 
 export const parseSearch = (input: string) => {
-  return language.expression.tryParse(input);
+  return searchLanguage.search.tryParse(input);
 };

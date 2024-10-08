@@ -1,5 +1,3 @@
-import { NodeName } from './nodeName';
-
-export abstract class ParsedNode<TName extends NodeName> {
+export abstract class ParsedNode<TName extends string> {
   constructor(public name: TName) {}
 }

@@ -4,30 +4,31 @@
  * Search Nonterminals
  * SRCH: Search
  * SEXP: Search Expression
- * SUO : Search Unit Operation
- * SUNT: Search Unit
- * SALL: Search Select All
  * SO  : Search Operation
- * SEXV: Exact Value Unit Search Operation
+ * SALL: Select All Search Operation
+ * SEXV: Exact Value Search Operation
  * SALV: Contains All Values Search Operation
  * SANV: Contains Any Value Search Operation
- * SEV : Is Empty Value Unit Search Operation
+ * SHT : Has Tag Name Search Operation
  *
  * Modification Nonterminals
  * MOD : Tag Modification
- * MUNT: Tag Modification Unit
+ * MEXP: Tag Modification Expression
+ * MDU : Tag Modification Description Unit
  * MO  : Tag Modification Operation
  * MAT : Add Tag Operation
+ * MRT : Remove Tag Operation
  * MSSV: Soft Set Tag Value Operation
  * MHSV: Hard Set Tag Value Operation
  * MAV : Add Value Unit Operation
  * MRV : Remove Value Unit Operation
+ * MAD : Add Description Operation
+ * MRD : Remove Description Operation
  *
  * Shared Nonterminals
  * TAG : Tag
  * TN  : Tag Name
  * TVU : Tag Value Unit
- * TEV : Tag Empty Value
  * TVL : Tag Value List
  * TVLE: Tag Value List Expression
  * TV  : Tag Value
@@ -40,19 +41,16 @@
  * -: Difference
  *
  * Search Tag Operators
- * := __ SEXV __ Has exact value unit and only those values (order does not matter)
- * :^ __ SALV __ Has all values in value unit
- * :~ __ SANV __ Value list has at least one value
- * :! __ SEMV __ Value list is empty
+ * *  __ SALL __ Find all pics
+ * := __ SEXV __ Find all pics having tag with a value list matching exact value unit and only those values (order does not matter)
+ * :^ __ SALV __ Find all pics having tag with a value list containing all values in value unit
+ * :~ __ SANV __ Find all pics having tag with a value list containing at least one value in value unit
  *
  * Tag Modification Operators
  * :   __ MSSV __ Soft set value list
- * :!  __ MSSV __ Soft set value list to empty list
  * :=  __ MHSV __ Hard set value list
- * :=! __ MHSV __ Hard set value list to empty list
  * :+  __ MAV  __ Add value unit to value list
  * :-  __ MRV  __ Remove value unit from value list
- *
  */
 
 /**
@@ -63,24 +61,27 @@
  *
  * Search
  * SRCH -> SEXP | ε
- * SEXP -> (SEXP) | SEXP ^ SEXP | SEXP + SEXP | SEXP - SEXP | SUNT
- * SUNT -> SALL | SUO | TAG
+ * SEXP -> (SEXP) | SEXP ^ SEXP | SEXP + SEXP | SEXP - SEXP | SO
+ * SO   -> SALL | SEXV | SALV | SANV | SHT
  * SALL -> *
- * SUO  -> SEXV | SALV | SANV | SEMV
  * SEXV -> TN:=TVU
  * SALV -> TN:^TVU
  * SANV -> TN:~TVU
- * SEMV -> TN:!
+ * SHT  -> TN
  *
  * Modification
- * MOD  -> MUNT | ε
- * MUNT -> MO | TAG
- * MO   -> ATO | SSVO | HSVO | AVO | RVO
+ * MOD  -> MEXP MDU | \s
+ * MEXP -> MO \s MEXP | MO
+ * MO   -> MAT | MRT | MSSV | MHSV | MAV | MRV
  * MAT  -> TN
- * MSSV -> TN:! | TN:TVU
- * MHSV -> TN:=! | T:=TVU
+ * MRT  -> -TN
+ * MSSV -> TN:TVU
+ * MHSV -> T:=TVU
  * MAV  -> TN:+TVU
  * MRV  -> TN:-TVU
+ * MDU  -> MAD | MRD
+ * MAD  -> #.*
+ * MRD  -> -#
  *
  * Shared
  * TAG  -> TN | TN:TVU
@@ -99,31 +100,34 @@
  * SEXP1 -> SEXP1 [+-] SEXP2 | SEXP2
  * SEXP2 -> SEXP2 ^ SEXP3 | SEXP3
  * SEXP3 -> ( SEXP1 ) | SEXP4
- * SEXP4 -> SUNT
- * SUNT  -> SALL | SUO | TAG
+ * SEXP4 -> SO
+ * SO    -> SALL | SEXV | SALV | SANV | SHT
  * SALL  -> *
- * SUO  -> SEXV | SALV | SANV | SEMV
- * SEXV -> TN:=TVU
- * SALV -> TN:^TVU
- * SANV -> TN:~TVU
- * SEMV -> TN:!
+ * SEXV  -> TN:=TVU
+ * SALV  -> TN:^TVU
+ * SANV  -> TN:~TVU
+ * SHT   -> TN
  *
  * Modification
- * MOD  -> MUNT | ε
- * MUNT -> MO | TAG
- * MO   -> ATO | SSVO | HSVO | AVO | RVO
+ * MOD  -> MEXP MDU | \s
+ * MEXP -> MO \s MEXP | MO
+ * MO   -> MAT | MRT | MSSV | MHSV | MAV | MRV
  * MAT  -> TN
- * MSSV -> TN:! | TN:TVU
- * MHSV -> TN:=! | T:=TVU
+ * MRT  -> -TN
+ * MSSV -> TN:TVU
+ * MHSV -> T:=TVU
  * MAV  -> TN:+TVU
  * MRV  -> TN:-TVU
+ * MDU  -> MAD | MRD
+ * MAD  -> #.*
+ * MRD  -> -#
  *
  * Shared
  * TAG  -> TN | TN:TVU
  * TN   -> KEB
  * TVU  -> ! | TVL | TV | ε
  * TVL  -> \[ TVLE \]
- * TVLE -> TV \s TV | TV | ε
+ * TVLE -> TVLE \s TV | TV | ε
  * TV   -> KEB
  */
 
@@ -131,36 +135,40 @@
  * Unambiguous Right Recursive Grammar
  *
  * Search
- * SRC   -> EXP1 | ε
+ * SRCH  -> EXP1 | ε
  * EXP1  -> EXP2 EXP1'
  * EXP1' -> [+-] EXP2 EXP1' | ε
  * EXP2  -> EXP3 EXP2'
  * EXP2' -> ^ EXP3 EXP2' | ε
  * EXP3  -> ( EXP1 ) | EXP4
- * EXP4  -> SUNT
- * SUNT  -> SALL | SUO | TAG
+ * EXP4  -> SO
+ * SO    -> SALL | SEXV | SALV | SANV | SHT
  * SALL  -> *
- * SUO  -> SEXV | SALV | SANV | SEMV
- * SEXV -> TN:=TVU
- * SALV -> TN:^TVU
- * SANV -> TN:~TVU
- * SEMV -> TN:!
+ * SEXV  -> TN:=TVU
+ * SALV  -> TN:^TVU
+ * SANV  -> TN:~TVU | TN:TV
+ * SHT   -> TN
  *
  * Modification
- * MOD  -> MUNT | ε
- * MUNT -> MO | TAG
- * MO   -> ATO | SSVO | HSVO | AVO | RVO
+ * MOD  -> MEXP MDU | \s
+ * MEXP -> MO \s MEXP | MO
+ * MO   -> MAT | MRT | MSSV | MHSV | MAV | MRV
  * MAT  -> TN
- * MSSV -> TN:! | TN:TVU
- * MHSV -> TN:=! | T:=TVU
+ * MRT  -> -TN
+ * MSSV -> TN:TVU
+ * MHSV -> T:=TVU
  * MAV  -> TN:+TVU
  * MRV  -> TN:-TVU
+ * MDU  -> MAD | MRD
+ * MAD  -> #.*
+ * MRD  -> -#
  *
  * Shared
- * TAG  -> TN | TN:TVU
+ * TAG  -> TN:TVU | TN
  * TN   -> KEB
- * TVU  -> ! | TVL | TV | ε
+ * TVU  -> TVL | TV | ε
  * TVL  -> \[ TVLE \]
- * TVLE -> TV \s TV | TV | ε
+ * TVLE -> TV TVLE' | ε
+ * TVLE'-> \s TV TVLE' | ε
  * TV   -> KEB
  */
