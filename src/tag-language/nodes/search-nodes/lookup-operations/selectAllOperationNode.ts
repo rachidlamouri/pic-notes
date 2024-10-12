@@ -8,6 +8,10 @@ export class SelectAllOperationNode extends SearchOperationNode<LookupOperationN
   }
 
   compute(metadataManager: MetadataManager): IdSet {
-    throw new Error('Not implemented');
+    const ids = Object.values(metadataManager.metadata.metaById).map(
+      (meta) => meta.id,
+    );
+
+    return new Set(ids);
   }
 }

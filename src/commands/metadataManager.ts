@@ -558,7 +558,6 @@ export class MetadataManager {
     const metaList = ids.map((id) => this.getMetaById(id));
 
     operations.forEach((operation) => {
-      console.log(operation.name);
       metaList.forEach((meta) => {
         operation.apply(meta);
       });

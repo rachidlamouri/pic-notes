@@ -12,6 +12,9 @@ export class UnionOperationNode extends SetOperationNode<SetOperationNodeName.Un
   }
 
   compute(metadataManager: MetadataManager): IdSet {
-    throw new Error('Not implemented');
+    const left = this.left.compute(metadataManager);
+    const right = this.right.compute(metadataManager);
+
+    return new Set([...left, ...right]);
   }
 }

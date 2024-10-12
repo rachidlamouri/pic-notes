@@ -265,19 +265,24 @@
       "tagMap": {
         "and-partisan-and-another-shield": [],
         "another-with-shield-through-sending-gate": [],
-        "FIXME": [],
+        "FIXME": [
+          "missing-knight-type"
+        ],
         "FIXME2": [],
         "grace": [
           "fort-gael-north"
         ],
         "knight": [
+          "shield",
           "sword"
         ],
         "location": [
           "fort-gael"
         ],
         "material": [
-          "smithing-stone"
+          "smithing-stone",
+          "smithing-stone-2",
+          "smithing-stone-3"
         ],
         "region": [
           "caelid"
@@ -303,13 +308,11 @@
           "gate-front-ruins"
         ],
         "material": [
-          "smithing-stone"
+          "smithing-stone",
+          "smithing-stone-1"
         ],
         "region": [
           "limgrave"
-        ],
-        "smithing-stone": [
-          "1"
         ]
       }
     },
@@ -1486,20 +1489,18 @@
       "id": "24-09-12:235-218",
       "filePath": "./pics/2024-09-12_23-52-18.png",
       "tagMap": {
-        "and-stone-3": [],
         "explored": [],
         "FIXME": [],
         "location": [
           "gael-tunnnel"
         ],
         "material": [
-          "smithing-stone"
+          "smithing-stone",
+          "smithing-stone-3",
+          "smithing-stone-4"
         ],
         "region": [
           "caelid"
-        ],
-        "smithing-stone": [
-          "4"
         ]
       }
     },
@@ -1701,9 +1702,6 @@
   "primaryIndex": {
     "and-partisan-and-another-shield": [
       "24-09-04:030-947"
-    ],
-    "and-stone-3": [
-      "24-09-12:235-218"
     ],
     "another-with-shield-through-sending-gate": [
       "24-09-04:030-947"
@@ -2253,9 +2251,7 @@
       "24-09-08:131-442"
     ],
     "smithing-stone": [
-      "24-09-02:145-853",
-      "24-09-04:032-706",
-      "24-09-12:235-218"
+      "24-09-02:145-853"
     ],
     "stone-2-and-3": [
       "24-09-04:030-947"
