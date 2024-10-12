@@ -16,16 +16,16 @@ export const categorizeArgs = (
   optionConfigMap: Map<OptionConfig['name'], OptionConfig>,
   args: string[],
 ): CategorizedArgs => {
-  const firstOptionIndex = args.findIndex((arg) => arg.startsWith('-'));
+  const firstOptionIndex = args.findIndex((arg) => arg.startsWith('--'));
 
   const initialPositionals =
     firstOptionIndex === -1 ? args : args.slice(0, firstOptionIndex);
 
   const indicies = args
-    .map((thing, index) => {
-      return thing.startsWith('-') ? index : -1;
+    .map((arg, index) => {
+      return arg.startsWith('--') ? index : -1;
     })
-    .filter((index) => index >= 0);
+    .filter((index) => index > -1);
 
   const options = indicies.map((optionIndex, listIndex) => {
     const nextOptionIndex = indicies[listIndex + 1] ?? args.length;

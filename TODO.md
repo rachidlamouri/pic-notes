@@ -1,0 +1,8 @@
+- [x] fix unreachable error being reached
+- [ ] add command to list all unique tags
+- [ ] move tags that serve as context to description
+- [ ] add feature for multiple values for tag
+  - can we just alphabetize values? Do we care about order?
+- [ ] Fix FIXME tag
+- [x] add feature for free form descriptions
+- [x] enable search for things without tags

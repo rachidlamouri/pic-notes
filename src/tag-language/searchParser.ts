@@ -1,22 +1,20 @@
-/**
- * @file
- * @note a comment with a single hyphen (// -) forces the formatter to break up
- * the subsequent statements into multiple lines
- */
-
 import P from 'parsimmon';
-import { TagNode } from './nodes/tagNode';
-import { ExpressionNode } from './nodes/expressionNode';
-import { IntersectionNode } from './nodes/intersectionNode';
 import { isArray } from '../utils/assertIsArray';
-import { ParsedNode } from './nodes/parsedNode';
-import { UnionNode } from './nodes/unionNode';
-import { DifferenceNode } from './nodes/differenceNode';
 import { Constructor } from 'type-fest';
-import { GenericOperationNode, OperationNode } from './nodes/operationNode';
-import { SelectAllNode } from './nodes/selectAllNode';
-import { KEBAB } from './tagParser';
-import { withIndentDebug } from './parserUtils';
+import { createLanguage, parserDebugger, ul } from './parserUtils';
+import {
+  GenericSearchOperationNode,
+  SearchOperationNode,
+} from './nodes/search-nodes/searchOperationNode';
+import { HasTagNameOperationNode } from './nodes/search-nodes/lookup-operations/hasTagNameOperationNode';
+import { tl } from './tagParser';
+import { HasAnyTagValueOperationNode } from './nodes/search-nodes/lookup-operations/hasAnyTagValueOperationNode';
+import { HasAllTagValuesOperationNode } from './nodes/search-nodes/lookup-operations/hasAllTagValuesOperationNode';
+import { HasExactTagValuesOperationNode } from './nodes/search-nodes/lookup-operations/hasExactTagValuesOperationNode';
+import { SelectAllOperationNode } from './nodes/search-nodes/lookup-operations/selectAllOperationNode';
+import { IntersectionOperationNode } from './nodes/search-nodes/set-operations/intersectionOperationNode';
+import { UnionOperationNode } from './nodes/search-nodes/set-operations/unionOperationNode';
+import { DifferenceOperationNode } from './nodes/search-nodes/set-operations/differenceOperationNode';
 
 enum Operator {
   Intersection = '^',
@@ -24,9 +22,13 @@ enum Operator {
   Difference = '-',
 }
 
-type OperationChainEnd = [Operator, ExpressionNode];
+type OperationChainEnd = [Operator, GenericSearchOperationNode];
 
-type NestedAccumulatedOperation = [Operator, ExpressionNode, unknown];
+type NestedAccumulatedOperation = [
+  Operator,
+  GenericSearchOperationNode,
+  unknown,
+];
 
 type AccumulatedOperation = NestedAccumulatedOperation | OperationChainEnd;
 
@@ -50,7 +52,7 @@ const isAccumulatedOperation = (
     isArray(datum) &&
     (datum.length === 2 || datum.length === 3) &&
     isOperator(datum[0]) &&
-    datum[1] instanceof ParsedNode
+    datum[1] instanceof SearchOperationNode
   );
 };
 
@@ -66,23 +68,23 @@ function assertIsAccumulatedOperation(
 
 const operationConstructorByOperator: Record<
   Operator,
-  Constructor<GenericOperationNode>
+  Constructor<GenericSearchOperationNode>
 > = {
-  [Operator.Intersection]: IntersectionNode,
-  [Operator.Union]: UnionNode,
-  [Operator.Difference]: DifferenceNode,
+  [Operator.Intersection]: IntersectionOperationNode,
+  [Operator.Union]: UnionOperationNode,
+  [Operator.Difference]: DifferenceOperationNode,
 };
 
 const associateLeft = ([leftExpression, accumulatedOperation]: [
-  ExpressionNode,
+  GenericSearchOperationNode,
   AccumulatedOperation,
-]): ExpressionNode => {
+]): GenericSearchOperationNode => {
   const operator = accumulatedOperation[0];
   const Operation = operationConstructorByOperator[operator];
 
-  const rightExpression: ExpressionNode = accumulatedOperation[1];
+  const rightExpression: GenericSearchOperationNode = accumulatedOperation[1];
 
-  let expression: ExpressionNode;
+  let expression: GenericSearchOperationNode;
   if (isNestedAccumulatedOperation(accumulatedOperation)) {
     const nextLeftExpression = new Operation(leftExpression, rightExpression);
     const nextAccumulatedOperation: unknown = accumulatedOperation[2];
@@ -97,224 +99,217 @@ const associateLeft = ([leftExpression, accumulatedOperation]: [
 };
 
 type SearchLanguage = {
-  expression: ExpressionNode;
-  subexpression1: ExpressionNode;
+  search: GenericSearchOperationNode | null;
+  subexpression1: GenericSearchOperationNode;
   subexpression1Prime: AccumulatedOperation | null;
-  subexpression2: ExpressionNode;
+  subexpression2: GenericSearchOperationNode;
   subexpression2Prime: AccumulatedOperation | null;
-  subexpression3: ExpressionNode;
-  subexpression4: SelectAllNode | TagNode;
-  unit: SelectAllNode | TagNode;
-  selectAll: SelectAllNode;
-  taggedValue: TagNode;
-  tag: TagNode;
-  value: string;
-  kebab: string;
-  ε: null;
+  subexpression3: GenericSearchOperationNode;
+  subexpression4: GenericSearchOperationNode;
+  searchOperation: GenericSearchOperationNode;
+  hasExactTagValuesOperation: HasExactTagValuesOperationNode;
+  hasAllTagValuesOperation: HasAllTagValuesOperationNode;
+  hasAnyTagValueOperation: HasAnyTagValueOperationNode;
+  hasTagNameOperation: HasTagNameOperationNode;
+  selectAllOperation: SelectAllOperationNode;
 };
 
-const language = P.createLanguage<SearchLanguage>({
-  expression: (l) => {
-    return withIndentDebug<SearchLanguage['expression']>(
-      'exp',
-      P.seq(
+const searchLanguage = createLanguage<SearchLanguage>(parserDebugger, {
+  search: (l) => {
+    return P.seq(
+      // -
+      P.optWhitespace,
+      P.alt<SearchLanguage['search']>(
         // -
-        P.optWhitespace,
         l.subexpression1,
-        P.optWhitespace,
-      ).map((result) => {
-        const expression = result[1];
-        return expression;
-      }),
-    );
+        ul.ε,
+      ),
+      P.optWhitespace,
+    ).map((result) => {
+      const expression = result[1];
+      return expression;
+    });
   },
   subexpression1: (l) => {
-    return withIndentDebug<SearchLanguage['subexpression1']>(
-      'exp1',
+    return P.seq(
+      // -
+      l.subexpression2,
+      l.subexpression1Prime,
+    ).map((result) => {
+      const subexpression2: GenericSearchOperationNode = result[0];
+      const subexpression1Prime: AccumulatedOperation | null = result[1];
+
+      if (subexpression1Prime === null) {
+        return subexpression2;
+      }
+
+      const expression = associateLeft([subexpression2, subexpression1Prime]);
+      return expression;
+    });
+  },
+  subexpression1Prime: (l) => {
+    return P.alt<SearchLanguage['subexpression1Prime']>(
       P.seq(
         // -
+        P.optWhitespace,
+        P.alt(
+          // -
+          P.string(Operator.Union),
+          P.string(Operator.Difference),
+        ),
+        P.optWhitespace,
         l.subexpression2,
         l.subexpression1Prime,
       ).map((result) => {
-        const subexpression2: ExpressionNode = result[0];
-        const subexpression1Prime: AccumulatedOperation | null = result[1];
+        const operator = result[1];
+        const subexpression2: GenericSearchOperationNode = result[3];
+        const subexpression1Prime: AccumulatedOperation | null = result[4];
 
         if (subexpression1Prime === null) {
-          return subexpression2;
+          return [operator, subexpression2] satisfies OperationChainEnd;
         }
 
-        const expression = associateLeft([subexpression2, subexpression1Prime]);
-        return expression;
+        return [
+          operator,
+          subexpression2,
+          subexpression1Prime,
+        ] satisfies NestedAccumulatedOperation;
       }),
-    );
-  },
-  subexpression1Prime: (l) => {
-    return withIndentDebug(
-      "exp1'",
-      P.alt<SearchLanguage['subexpression1Prime']>(
-        P.seq(
-          // -
-          P.optWhitespace,
-          P.alt(
-            // -
-            P.string(Operator.Union),
-            P.string(Operator.Difference),
-          ),
-          P.optWhitespace,
-          l.subexpression2,
-          l.subexpression1Prime,
-        ).map((result) => {
-          const operator = result[1];
-          const subexpression2: ExpressionNode = result[3];
-          const subexpression1Prime: AccumulatedOperation | null = result[4];
-
-          if (subexpression1Prime === null) {
-            return [operator, subexpression2] satisfies OperationChainEnd;
-          }
-
-          return [
-            operator,
-            subexpression2,
-            subexpression1Prime,
-          ] satisfies NestedAccumulatedOperation;
-        }),
-        l.ε,
-      ),
+      ul.ε,
     );
   },
   subexpression2: (l) => {
-    return withIndentDebug<SearchLanguage['subexpression2']>(
-      'exp3',
+    return P.seq(
+      // -
+      l.subexpression3,
+      l.subexpression2Prime,
+    ).map((result) => {
+      const subexpression3: GenericSearchOperationNode = result[0];
+      const subexpressionPrime: AccumulatedOperation | null = result[1];
+
+      if (subexpressionPrime === null) {
+        return subexpression3;
+      }
+
+      const expression = associateLeft([subexpression3, subexpressionPrime]);
+      return expression;
+    });
+  },
+  subexpression2Prime: (l) => {
+    return P.alt<SearchLanguage['subexpression2Prime']>(
       P.seq(
         // -
+        P.optWhitespace,
+        P.string(Operator.Intersection),
+        P.optWhitespace,
         l.subexpression3,
         l.subexpression2Prime,
       ).map((result) => {
-        const subexpression3: ExpressionNode = result[0];
-        const subexpressionPrime: AccumulatedOperation | null = result[1];
+        const operator = result[1];
+        const subexpression3 = result[3];
+        const subexpression2Prime = result[4];
 
-        if (subexpressionPrime === null) {
-          return subexpression3;
+        if (subexpression2Prime === null) {
+          return [operator, subexpression3] satisfies OperationChainEnd;
         }
 
-        const expression = associateLeft([subexpression3, subexpressionPrime]);
-        return expression;
+        return [
+          operator,
+          subexpression3,
+          subexpression2Prime,
+        ] satisfies NestedAccumulatedOperation;
       }),
-    );
-  },
-  subexpression2Prime: (l) => {
-    return withIndentDebug(
-      "exp3'",
-      P.alt<SearchLanguage['subexpression2Prime']>(
-        P.seq(
-          // -
-          P.optWhitespace,
-          P.string(Operator.Intersection),
-          P.optWhitespace,
-          l.subexpression3,
-          l.subexpression2Prime,
-        ).map((result) => {
-          const operator = result[1];
-          const subexpression3 = result[3];
-          const subexpression2Prime = result[4];
-
-          if (subexpression2Prime === null) {
-            return [operator, subexpression3] satisfies OperationChainEnd;
-          }
-
-          return [
-            operator,
-            subexpression3,
-            subexpression2Prime,
-          ] satisfies NestedAccumulatedOperation;
-        }),
-        l.ε,
-      ),
+      ul.ε,
     );
   },
   subexpression3: (l) => {
-    return withIndentDebug(
-      'exp4',
-      P.alt<SearchLanguage['subexpression3']>(
-        // -
-        P.seq(
-          P.string('('),
-          P.optWhitespace,
-          l.subexpression1,
-          P.optWhitespace,
-          P.string(')'),
-        ).map((result) => {
-          return result[2];
-        }),
-        l.subexpression4,
-      ),
+    return P.alt<SearchLanguage['subexpression3']>(
+      // -
+      P.seq(
+        P.string('('),
+        P.optWhitespace,
+        l.subexpression1,
+        P.optWhitespace,
+        P.string(')'),
+      ).map((result) => {
+        return result[2];
+      }),
+      l.subexpression4,
     );
   },
   subexpression4: (l) => {
-    return withIndentDebug<SearchLanguage['subexpression4']>(
-      // -
-      'exp5',
-      l.unit,
+    return l.searchOperation;
+  },
+  searchOperation: (l) => {
+    return P.alt<SearchLanguage['searchOperation']>(
+      l.hasExactTagValuesOperation,
+      l.hasAllTagValuesOperation,
+      l.hasAnyTagValueOperation,
+      l.hasTagNameOperation,
+      l.selectAllOperation,
     );
   },
-  unit: (l) => {
-    return withIndentDebug(
-      'unt',
-      P.alt<SearchLanguage['unit']>(
-        // -
-        l.selectAll,
-        l.taggedValue,
-        l.tag,
+  hasExactTagValuesOperation: () => {
+    return P.seq(
+      // -
+      tl.tagName,
+      tl.delimiter,
+      P.string('='),
+      tl.tagValueUnit,
+    ).map((result) => {
+      const tagName = result[0];
+      const tagValueList = result[3];
+      return new HasExactTagValuesOperationNode(tagName, tagValueList);
+    });
+  },
+  hasAllTagValuesOperation: () => {
+    return P.seq(
+      // -
+      tl.tagName,
+      tl.delimiter,
+      P.string('^'),
+      tl.tagValueUnit,
+    ).map((result) => {
+      const tagName = result[0];
+      const tagValueList = result[3];
+      return new HasAllTagValuesOperationNode(tagName, tagValueList);
+    });
+  },
+  hasAnyTagValueOperation: () => {
+    return P.seq(
+      tl.tagName,
+      tl.delimiter,
+      P.alt<string[]>(
+        P.seq(
+          // -
+          P.string('~'),
+          tl.tagValueUnit,
+        ).map((result) => {
+          const tagValueList = result[1];
+          return tagValueList;
+        }),
+        tl.tagValue.map((value) => {
+          return [value];
+        }),
       ),
-    );
+    ).map((result) => {
+      const tagName = result[0];
+      const tagValueList = result[2];
+      return new HasAnyTagValueOperationNode(tagName, tagValueList);
+    });
   },
-  selectAll: (l) => {
-    return withIndentDebug<SearchLanguage['selectAll']>(
-      'all',
-      P.string('*').map(() => {
-        return new SelectAllNode();
-      }),
-    );
+  hasTagNameOperation: () => {
+    return tl.tagName.map((tagName) => {
+      return new HasTagNameOperationNode(tagName);
+    });
   },
-  taggedValue: (l) => {
-    return withIndentDebug<SearchLanguage['taggedValue']>(
-      'tv',
-      P.seq(
-        // -
-        l.tag,
-        P.string(':'),
-        l.value,
-      ).map((result) => {
-        const tagName = result[0].tag.name;
-        const tagValue = result[2];
-        return new TagNode(tagName, tagValue);
-      }),
-    );
-  },
-  tag: (l) => {
-    return withIndentDebug<SearchLanguage['tag']>(
-      // -
-      'tag',
-      l.kebab.map((tagName) => {
-        return new TagNode(tagName);
-      }),
-    );
-  },
-  value: (l) => {
-    return withIndentDebug<SearchLanguage['value']>(
-      // -
-      'val',
-      l.kebab,
-    );
-  },
-  kebab: () => {
-    return P.regex(KEBAB);
-  },
-  ε: () => {
-    return P.string('').result(null);
+  selectAllOperation: () => {
+    return P.string('*').map(() => {
+      return new SelectAllOperationNode();
+    });
   },
 });
 
 export const parseSearch = (input: string) => {
-  return language.expression.tryParse(input);
+  return searchLanguage.search.tryParse(input);
 };

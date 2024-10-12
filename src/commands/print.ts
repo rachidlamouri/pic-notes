@@ -2,13 +2,17 @@ import { Meta } from './metadataManager';
 
 const DIVIDER = Array.from({ length: 40 }).fill('-').join('');
 
+export const printDivider = () => {
+  console.log(DIVIDER);
+};
+
 export const printMeta = (meta: Meta, includeDivider = false) => {
   const tags = [...meta.tagMap.values()].sort((tagA, tagB) => {
-    if (tagA.value !== undefined && tagB.value === undefined) {
+    if (tagA.valueCount > 0 && tagB.valueCount === 0) {
       return -1;
     }
 
-    if (tagA.value === undefined && tagB.value !== undefined) {
+    if (tagA.valueCount === 0 && tagB.valueCount > 0) {
       return 1;
     }
 
@@ -25,13 +29,13 @@ export const printMeta = (meta: Meta, includeDivider = false) => {
 
   console.log('Id   |', meta.id);
   console.log('File |', meta.filePath);
-  console.log('Tags |', tags.map((tag) => tag.serialized).join(', '));
+  console.log('Tags |', tags.map((tag) => tag.serialize()).join(', '));
   if (meta.description !== undefined) {
     console.log('Desc |', meta.description);
   }
 
   if (includeDivider) {
-    console.log(DIVIDER);
+    printDivider();
   }
 };
 

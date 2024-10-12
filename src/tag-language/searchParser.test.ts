@@ -1,10 +1,13 @@
-import { TagNode } from './nodes/tagNode';
-import { IntersectionNode } from './nodes/intersectionNode';
-import { UnionNode } from './nodes/unionNode';
-import { DifferenceNode } from './nodes/differenceNode';
 import { parseSearch } from './searchParser';
 import assert from 'assert';
-import { SelectAllNode } from './nodes/selectAllNode';
+import { HasTagNameOperationNode } from './nodes/search-nodes/lookup-operations/hasTagNameOperationNode';
+import { HasAnyTagValueOperationNode } from './nodes/search-nodes/lookup-operations/hasAnyTagValueOperationNode';
+import { HasAllTagValuesOperationNode } from './nodes/search-nodes/lookup-operations/hasAllTagValuesOperationNode';
+import { SelectAllOperationNode } from './nodes/search-nodes/lookup-operations/selectAllOperationNode';
+import { HasExactTagValuesOperationNode } from './nodes/search-nodes/lookup-operations/hasExactTagValuesOperationNode';
+import { DifferenceOperationNode } from './nodes/search-nodes/set-operations/differenceOperationNode';
+import { IntersectionOperationNode } from './nodes/search-nodes/set-operations/intersectionOperationNode';
+import { UnionOperationNode } from './nodes/search-nodes/set-operations/unionOperationNode';
 
 console.log('• Testing select all');
 {
@@ -12,37 +15,97 @@ console.log('• Testing select all');
   assert.deepEqual(
     // -
     result,
-    new SelectAllNode(),
+    new SelectAllOperationNode(),
   );
 }
 
-console.log('• Testing tag');
+console.log('• Testing has tag name search');
 {
   const result = parseSearch('a');
   assert.deepEqual(
     // -
     result,
-    new TagNode('a'),
+    new HasTagNameOperationNode('a'),
   );
 }
 
-console.log('• Testing tagged value');
+console.log('• Testing has any value search (single value without ~)');
 {
   const result = parseSearch('a:b');
   assert.deepEqual(
     // -
     result,
-    new TagNode('a', 'b'),
+    new HasAnyTagValueOperationNode('a', ['b']),
   );
 }
 
-console.log('• Parenthesis');
+console.log('• Testing has any value search (single value with ~)');
+{
+  const result = parseSearch('a:~b');
+  assert.deepEqual(
+    // -
+    result,
+    new HasAnyTagValueOperationNode('a', ['b']),
+  );
+}
+
+console.log('• Testing has any value search (multiple values)');
+{
+  const result = parseSearch('a:~[b c d]');
+  assert.deepEqual(
+    // -
+    result,
+    new HasAnyTagValueOperationNode('a', ['b', 'c', 'd']),
+  );
+}
+
+console.log('• Testing has all values search (single value)');
+{
+  const result = parseSearch('a:^b');
+  assert.deepEqual(
+    // -
+    result,
+    new HasAllTagValuesOperationNode('a', ['b']),
+  );
+}
+
+console.log('• Testing has all values search (multiple values)');
+{
+  const result = parseSearch('a:^[b c d]');
+  assert.deepEqual(
+    // -
+    result,
+    new HasAllTagValuesOperationNode('a', ['b', 'c', 'd']),
+  );
+}
+
+console.log('• Testing has exact values search (single value)');
+{
+  const result = parseSearch('a:=b');
+  assert.deepEqual(
+    // -
+    result,
+    new HasExactTagValuesOperationNode('a', ['b']),
+  );
+}
+
+console.log('• Testing has exact values search (multiple values)');
+{
+  const result = parseSearch('a:=[b c d]');
+  assert.deepEqual(
+    // -
+    result,
+    new HasExactTagValuesOperationNode('a', ['b', 'c', 'd']),
+  );
+}
+
+console.log('• Testing parenthesis');
 {
   const result = parseSearch('(a)');
   assert.deepEqual(
     // -
     result,
-    new TagNode('a'),
+    new HasTagNameOperationNode('a'),
   );
 }
 
@@ -51,10 +114,10 @@ console.log('• Testing intersection operator');
   const result = parseSearch('a ^ b');
   assert.deepEqual(
     result,
-    new IntersectionNode(
+    new IntersectionOperationNode(
       // -
-      new TagNode('a'),
-      new TagNode('b'),
+      new HasTagNameOperationNode('a'),
+      new HasTagNameOperationNode('b'),
     ),
   );
 }
@@ -64,13 +127,26 @@ console.log('• Testing intersection associativity');
   const result = parseSearch('a ^ b ^ c');
   assert.deepEqual(
     result,
-    new IntersectionNode(
-      new IntersectionNode(
-        // -
-        new TagNode('a'),
-        new TagNode('b'),
+    new IntersectionOperationNode(
+      // -
+      new IntersectionOperationNode(
+        new HasTagNameOperationNode('a'),
+        new HasTagNameOperationNode('b'),
       ),
-      new TagNode('c'),
+      new HasTagNameOperationNode('c'),
+    ),
+  );
+}
+
+console.log('• Testing overloaded "^" operator');
+{
+  const result = parseSearch('a:^b ^ c:^d');
+  assert.deepEqual(
+    result,
+    new IntersectionOperationNode(
+      // -
+      new HasAllTagValuesOperationNode('a', ['b']),
+      new HasAllTagValuesOperationNode('c', ['d']),
     ),
   );
 }
@@ -80,10 +156,10 @@ console.log('• Testing union operator');
   const result = parseSearch('a + b');
   assert.deepEqual(
     result,
-    new UnionNode(
+    new UnionOperationNode(
       // -
-      new TagNode('a'),
-      new TagNode('b'),
+      new HasTagNameOperationNode('a'),
+      new HasTagNameOperationNode('b'),
     ),
   );
 }
@@ -93,13 +169,13 @@ console.log('• Testing union associativity');
   const result = parseSearch('a + b + c');
   assert.deepEqual(
     result,
-    new UnionNode(
-      new UnionNode(
-        // -
-        new TagNode('a'),
-        new TagNode('b'),
+    new UnionOperationNode(
+      // -
+      new UnionOperationNode(
+        new HasTagNameOperationNode('a'),
+        new HasTagNameOperationNode('b'),
       ),
-      new TagNode('c'),
+      new HasTagNameOperationNode('c'),
     ),
   );
 }
@@ -109,10 +185,10 @@ console.log('• Testing difference operator');
   const result = parseSearch('a - b');
   assert.deepEqual(
     result,
-    new DifferenceNode(
+    new DifferenceOperationNode(
       // -
-      new TagNode('a'),
-      new TagNode('b'),
+      new HasTagNameOperationNode('a'),
+      new HasTagNameOperationNode('b'),
     ),
   );
 }
@@ -122,13 +198,13 @@ console.log('• Testing difference associativity');
   const result = parseSearch('a - b - c');
   assert.deepEqual(
     result,
-    new DifferenceNode(
-      new DifferenceNode(
-        // -
-        new TagNode('a'),
-        new TagNode('b'),
+    new DifferenceOperationNode(
+      // -
+      new DifferenceOperationNode(
+        new HasTagNameOperationNode('a'),
+        new HasTagNameOperationNode('b'),
       ),
-      new TagNode('c'),
+      new HasTagNameOperationNode('c'),
     ),
   );
 }
@@ -138,16 +214,16 @@ console.log('• Testing precedence ( ^ + - )');
   const result = parseSearch('a ^ b + c - d');
   assert.deepEqual(
     result,
-    new DifferenceNode(
-      new UnionNode(
-        new IntersectionNode(
+    new DifferenceOperationNode(
+      new UnionOperationNode(
+        new IntersectionOperationNode(
           // -
-          new TagNode('a'),
-          new TagNode('b'),
+          new HasTagNameOperationNode('a'),
+          new HasTagNameOperationNode('b'),
         ),
-        new TagNode('c'),
+        new HasTagNameOperationNode('c'),
       ),
-      new TagNode('d'),
+      new HasTagNameOperationNode('d'),
     ),
   );
 }
@@ -157,16 +233,16 @@ console.log('• Testing precedence ( ^ - + )');
   const result = parseSearch('a ^ b - c + d');
   assert.deepEqual(
     result,
-    new UnionNode(
-      new DifferenceNode(
-        new IntersectionNode(
+    new UnionOperationNode(
+      new DifferenceOperationNode(
+        new IntersectionOperationNode(
           // -
-          new TagNode('a'),
-          new TagNode('b'),
+          new HasTagNameOperationNode('a'),
+          new HasTagNameOperationNode('b'),
         ),
-        new TagNode('c'),
+        new HasTagNameOperationNode('c'),
       ),
-      new TagNode('d'),
+      new HasTagNameOperationNode('d'),
     ),
   );
 }
@@ -176,16 +252,16 @@ console.log('• Testing precedence ( + ^ - )');
   const result = parseSearch('a + b ^ c - d');
   assert.deepEqual(
     result,
-    new DifferenceNode(
-      new UnionNode(
-        new TagNode('a'),
-        new IntersectionNode(
+    new DifferenceOperationNode(
+      new UnionOperationNode(
+        new HasTagNameOperationNode('a'),
+        new IntersectionOperationNode(
           // -
-          new TagNode('b'),
-          new TagNode('c'),
+          new HasTagNameOperationNode('b'),
+          new HasTagNameOperationNode('c'),
         ),
       ),
-      new TagNode('d'),
+      new HasTagNameOperationNode('d'),
     ),
   );
 }
@@ -195,16 +271,16 @@ console.log('• Testing precedence ( + - ^ )');
   const result = parseSearch('a + b - c ^ d');
   assert.deepEqual(
     result,
-    new DifferenceNode(
-      new UnionNode(
+    new DifferenceOperationNode(
+      new UnionOperationNode(
         // -
-        new TagNode('a'),
-        new TagNode('b'),
+        new HasTagNameOperationNode('a'),
+        new HasTagNameOperationNode('b'),
       ),
-      new IntersectionNode(
+      new IntersectionOperationNode(
         // -
-        new TagNode('c'),
-        new TagNode('d'),
+        new HasTagNameOperationNode('c'),
+        new HasTagNameOperationNode('d'),
       ),
     ),
   );
@@ -215,16 +291,16 @@ console.log('• Testing precedence ( - ^ + )');
   const result = parseSearch('a - b ^ c + d');
   assert.deepEqual(
     result,
-    new UnionNode(
-      new DifferenceNode(
-        new TagNode('a'),
-        new IntersectionNode(
+    new UnionOperationNode(
+      new DifferenceOperationNode(
+        new HasTagNameOperationNode('a'),
+        new IntersectionOperationNode(
           // -
-          new TagNode('b'),
-          new TagNode('c'),
+          new HasTagNameOperationNode('b'),
+          new HasTagNameOperationNode('c'),
         ),
       ),
-      new TagNode('d'),
+      new HasTagNameOperationNode('d'),
     ),
   );
 }
@@ -234,16 +310,16 @@ console.log('• Testing precedence ( - + ^ )');
   const result = parseSearch('a - b + c ^ d');
   assert.deepEqual(
     result,
-    new UnionNode(
-      new DifferenceNode(
+    new UnionOperationNode(
+      new DifferenceOperationNode(
         // -
-        new TagNode('a'),
-        new TagNode('b'),
+        new HasTagNameOperationNode('a'),
+        new HasTagNameOperationNode('b'),
       ),
-      new IntersectionNode(
+      new IntersectionOperationNode(
         // -
-        new TagNode('c'),
-        new TagNode('d'),
+        new HasTagNameOperationNode('c'),
+        new HasTagNameOperationNode('d'),
       ),
     ),
   );
@@ -254,16 +330,16 @@ console.log('• Testing parenthesis precedence');
   const result = parseSearch('(a - b) ^ (c + d)');
   assert.deepEqual(
     result,
-    new IntersectionNode(
-      new DifferenceNode(
+    new IntersectionOperationNode(
+      new DifferenceOperationNode(
         // -
-        new TagNode('a'),
-        new TagNode('b'),
+        new HasTagNameOperationNode('a'),
+        new HasTagNameOperationNode('b'),
       ),
-      new UnionNode(
+      new UnionOperationNode(
         // -
-        new TagNode('c'),
-        new TagNode('d'),
+        new HasTagNameOperationNode('c'),
+        new HasTagNameOperationNode('d'),
       ),
     ),
   );
@@ -274,17 +350,17 @@ console.log('• Testing nested parenthesis precedence');
   const result = parseSearch('(a + (b - c) + d)');
   assert.deepEqual(
     result,
-    new UnionNode(
-      new UnionNode(
+    new UnionOperationNode(
+      new UnionOperationNode(
         // -
-        new TagNode('a'),
-        new DifferenceNode(
+        new HasTagNameOperationNode('a'),
+        new DifferenceOperationNode(
           // -
-          new TagNode('b'),
-          new TagNode('c'),
+          new HasTagNameOperationNode('b'),
+          new HasTagNameOperationNode('c'),
         ),
       ),
-      new TagNode('d'),
+      new HasTagNameOperationNode('d'),
     ),
   );
 }
