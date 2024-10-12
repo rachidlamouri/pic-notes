@@ -4,33 +4,21 @@ import { Command } from '../command';
 import { CommandName } from '../commandName';
 import { printMetaList } from '../print';
 import { withExit } from '../withExit';
-import { Tag as MetaTag } from '../metadataManager';
-import { hasAtLeastOne } from '../../utils/hasAtLeastOne';
+import { parseModification } from '../../tag-language/modificationParser';
 
 export class Tag extends Command<CommandName.Tag> {
   name = CommandName.Tag as const;
-  description =
-    "Adds one or more tags to a picture's metadata. Duplicate tags are not added twice. Tags passed to the untag option will be removed from the picture's metadata. Non-existant tags are ignored.";
+  description = 'Add/remove tags and/or values. See README for syntax.';
   examples = [
-    '<id> <tag1> [, <tag2> [, ...<tagN>]]',
-    '--latest <tag1> [, <tag2> [, ...<tagN>]]',
-    '<id> [<tag1> , <tag2> [, ...<tagN>]] --untag <tagA> [, <tagB> [, ...<tagC>]]',
-    '--ids [<id1> , <id2> [, ...<idN>]] --tags <tag1> [, <tag2> [, ...<tagN>]] --untag <tagA> [, <tagB> [, ...<tagZ>]]',
-    '<id> --describe <description>',
-    '<id> --undescribe',
+    '<id> <tag-query>',
+    '--latest <tag-query>',
+    '--ids [<id1> , <id2> [, ...<idN>]] --tags <tag-query>',
   ];
 
   run(commandArgs: string[]): void {
     const {
       positionals,
-      options: {
-        latest,
-        untag: untagList = [],
-        tags: inputTagList = [],
-        ids: inputIdList = [],
-        describe: description,
-        undescribe,
-      },
+      options: { latest, ids: inputIdList = [] },
     } = parseArgs({
       args: commandArgs,
       positionals: [] as const,
@@ -40,58 +28,54 @@ export class Tag extends Command<CommandName.Tag> {
           type: ParseableType.StringList,
         },
         {
-          name: 'tags',
-          type: ParseableType.StringList,
-        },
-        {
           name: 'latest',
-          type: ParseableType.Boolean,
-        },
-        {
-          name: 'untag',
-          type: ParseableType.StringList,
-        },
-        {
-          name: 'describe',
-          type: ParseableType.String,
-        },
-        {
-          name: 'undescribe',
           type: ParseableType.Boolean,
         },
       ] as const,
     });
 
-    if (
-      (positionals.length > 0 && inputIdList.length > 0) ||
-      (latest && inputIdList.length > 0) ||
-      (positionals.length === 0 && !latest && inputIdList.length === 0) ||
-      (positionals.length === 0 &&
-        inputTagList.length === 0 &&
-        untagList.length === 0) ||
-      (description !== undefined && undescribe)
-    ) {
+    let rawIdList: string[];
+    let positionalQueryTextList: string[];
+    if (latest) {
+      rawIdList = [this.picturesManager.lastPicture.id];
+      positionalQueryTextList = positionals;
+    } else if (inputIdList.length > 0) {
+      rawIdList = inputIdList;
+      positionalQueryTextList = positionals;
+    } else if (positionals[0] !== undefined) {
+      rawIdList = [positionals[0]];
+      positionalQueryTextList = positionals.slice(1);
+    } else {
+      withExit(1, () => {
+        console.log('Missing id');
+        this.printUsage();
+      });
+    }
+
+    const {
+      options: { query: optionQueryTextList = [] },
+    } = parseArgs({
+      args: commandArgs,
+      positionals: [] as const,
+      options: [
+        {
+          name: 'query',
+          type: ParseableType.StringList,
+        },
+      ] as const,
+    });
+
+    const positionalQuery = positionalQueryTextList.join(' ').trim();
+    const optionQuery = optionQueryTextList.join(' ').trim();
+
+    if (positionalQuery.length > 0 && optionQuery.length > 0) {
       withExit(1, () => {
         console.log('Invalid input');
         this.printUsage();
       });
     }
 
-    let rawIdList: string[];
-    let rawTagList: string[];
-    if (latest) {
-      rawIdList = [this.picturesManager.lastPicture.id];
-      rawTagList = positionals;
-    } else if (hasAtLeastOne(positionals)) {
-      const inputId = positionals[0];
-      rawIdList = [inputId];
-      rawTagList = positionals.slice(1);
-    } else if (inputIdList.length > 0) {
-      rawIdList = inputIdList;
-      rawTagList = inputTagList;
-    } else {
-      throw new Error('Unreachable');
-    }
+    const query = positionalQuery || optionQuery;
 
     const invalidRawIds = rawIdList.filter((id) => !Command.isIdParseable(id));
     if (invalidRawIds.length > 0) {
@@ -99,7 +83,6 @@ export class Tag extends Command<CommandName.Tag> {
     }
 
     const idList: string[] = rawIdList.map(Command.parseInputId);
-    const tagList: MetaTag[] = rawTagList.map(MetaTag.fromSerialized);
 
     const invalidIdList: string[] = [];
     const validIdList: string[] = [];
@@ -115,18 +98,8 @@ export class Tag extends Command<CommandName.Tag> {
       withExit(1, console.log, 'Ids do not exist:', invalidIdList.join(', '));
     }
 
-    validIdList.forEach((id) => {
-      this.metadataManager.addTags(id, tagList);
-      this.metadataManager.removeTags(id, untagList);
-
-      if (description !== undefined) {
-        this.metadataManager.updateDescription(id, description);
-      }
-
-      if (undescribe) {
-        this.metadataManager.updateDescription(id, undefined);
-      }
-    });
+    const operations = parseModification(query).operations;
+    this.metadataManager.modify(validIdList, operations);
 
     withExit(
       0,

@@ -10,145 +10,463 @@ import { PicturesManager } from './picturesManager';
 import fs from 'fs';
 import { withExit } from './withExit';
 import { assertHasExactlyZero } from '../utils/assertHasExactlyZero';
+import { unknown, z } from 'zod';
+import { HighlightSpanKind } from 'typescript';
+import { tl } from '../tag-language/tagParser';
+import { Replace, SetFieldType, SetOptional } from 'type-fest';
+import {
+  GenericModificationOperationNode,
+  ModificationOperationNode,
+} from '../tag-language/nodes/modification-nodes/modificationOperationNode';
+import { LookupOperationNode } from '../tag-language/nodes/search-nodes/lookup-operations/lookupOperationNode';
 
-type TagTupleJson = readonly [name: string, value: string];
+const TagNameSchema = z.string();
+export type TagName = z.infer<typeof TagNameSchema>;
 
-type TagJson = TagName | TagTupleJson;
+const TagValueSchema = z.string();
+export type TagValue = z.infer<typeof TagValueSchema>;
 
-type TagTuple = readonly [name: string, value?: string];
+const TagValueListSchema = z.array(TagValueSchema);
+export type TagValueList = z.infer<typeof TagValueListSchema>;
 
-type TagValue = TagTuple[1];
+class TagValueSet extends Set<string> {}
 
-type TagName = TagTuple[0];
-
-type SerializedTag = string;
+/** @deprecated */
+const TagTupleSchema = z.tuple([TagNameSchema, TagValueSchema]);
+/** @deprecated */
+type TagTuple = z.infer<typeof TagTupleSchema>;
 
 export class Tag {
   name: TagName;
-  value: TagValue;
+  private valueSet: TagValueSet;
 
-  static fromSerialized(serializedTag: string): Tag {
-    const [tagName, tagValue, ...rest] = serializedTag.split(':');
-    assertIsString(tagName);
-    assertHasExactlyZero(rest);
-    return new Tag([tagName, tagValue]);
+  constructor(name: TagName, valueList: TagValueList) {
+    this.name = name;
+    this.valueSet = new TagValueSet(valueList);
   }
 
-  constructor(tuple: TagTuple) {
-    this.name = tuple[0];
-    this.value = tuple[1];
+  isEqual(tag: Tag) {
+    return (
+      this.valueCount === tag.valueCount &&
+      this.getValueList().every((value) => tag.hasValue(value))
+    );
   }
 
-  get serialized() {
-    const valuePart = this.value === undefined ? '' : `:${this.value}`;
+  hasValue(value: TagValue) {
+    return this.valueSet.has(value);
+  }
+
+  addToValueSet(value: TagValue) {
+    this.valueSet.add(value);
+  }
+
+  removeFromValueSet(value: TagValue) {
+    this.valueSet.delete(value);
+  }
+
+  get valueCount(): number {
+    return this.valueSet.size;
+  }
+
+  getValueList() {
+    return [...this.valueSet];
+  }
+
+  static buildSecondaryIndexKey(
+    tagName: TagName,
+    tagValue: TagValue,
+  ): SecondaryIndexKey {
+    return `${tagName}:${tagValue}`;
+  }
+
+  getSecondaryIndexKeys(): SecondaryIndexKey[] {
+    return this.getValueList().map((value): SecondaryIndexKey => {
+      return Tag.buildSecondaryIndexKey(this.name, value);
+    });
+  }
+
+  serialize() {
+    let valuePart: string;
+    if (this.valueCount === 0) {
+      valuePart = '';
+    } else if (this.valueCount === 1) {
+      const value = this.getValueList()[0];
+      assertIsNotUndefined(value);
+      valuePart = `:${value}`;
+    } else {
+      valuePart = `:[${this.getValueList().toSorted().join(', ')}]`;
+    }
 
     return `${this.name}${valuePart}`;
   }
+
+  // get serialized() {
+  //   let valuePart: string;
+  //   if (this.valueList.length > 1) {
+  //     valuePart = `:[${this.valueList.join(',')}]`;
+  //   } else if (this.valueList[0] !== undefined) {
+  //     valuePart = `:${this.valueList[0]}`;
+  //   } else {
+  //     valuePart = '';
+  //   }
+
+  //   return `${this.name}${valuePart}`;
+  // }
 }
 
-export class IdSet extends Set<string> {}
+/** @deprecated */
+const TagSetSchema = z.array(z.union([TagNameSchema, TagTupleSchema]));
+type TagSetJson = z.infer<typeof TagSetSchema>;
 
-class TagMap extends Map<TagName, Tag> {}
+const TagMapSchema = z.record(TagNameSchema, TagValueListSchema);
+type TagMapJson = z.infer<typeof TagMapSchema>;
 
-type MetaJson = {
-  id: string;
-  filePath: string;
-  tagSet: TagJson[];
-  description?: string;
-};
+class TagMap extends Map<TagName, Tag> {
+  static fromJson(tagMapJson: TagMapJson): TagMap {
+    const jsonEntries = Object.entries(tagMapJson);
+    const entries = jsonEntries.map(([tagName, tagValueList]) => {
+      const tag = new Tag(tagName, tagValueList);
+      return [tagName, tag] as const;
+    });
+    return new TagMap(entries);
+  }
+}
 
-export type Meta = {
+const MetaIdSchema = z.string();
+export type MetaId = z.infer<typeof MetaIdSchema>;
+
+const MetaSchema = z.object({
+  id: MetaIdSchema,
+  filePath: z.string(),
+  tagSet: TagSetSchema.optional(),
+  tagMap: TagMapSchema.optional(),
+  description: z.string().optional(),
+});
+type MetaJson = z.infer<typeof MetaSchema>;
+
+type MetaInput = {
   id: string;
   filePath: string;
   tagMap: TagMap;
   description: string | undefined;
 };
+export class Meta implements MetaInput {
+  id: string;
+  filePath: string;
+  tagMap: TagMap;
+  description: string | undefined;
 
-export const hasTag = (meta: Meta, tag: Tag) => {
-  const savedTag = meta.tagMap.get(tag.name);
+  constructor({ id, filePath, tagMap, description }: MetaInput) {
+    this.id = id;
+    this.filePath = filePath;
+    this.tagMap = tagMap;
+    this.description = description;
+  }
 
-  return (
-    savedTag !== undefined &&
-    (tag.value === undefined || savedTag.value === tag.value)
-  );
-};
+  hasTag(tagName: string): boolean {
+    return this.tagMap.has(tagName);
+  }
 
-function assertIsTagSetJson(
-  tagSet: unknown[],
-): asserts tagSet is MetaJson['tagSet'] {
-  const isTagSetJson = tagSet.every((tag) => {
-    return (
-      isString(tag) ||
-      (isArray(tag) &&
-        (tag.length === 1 || tag.length === 2) &&
-        isString(tag[0]) &&
-        (isString(tag[1]) || tag[1] === undefined))
+  getTag(tagName: TagName): Tag {
+    const tag = this.tagMap.get(tagName);
+    assertIsNotUndefined(tag);
+    return tag;
+  }
+
+  getAllTags(): Tag[] {
+    return [...this.tagMap.values()];
+  }
+
+  setTag(tag: Tag) {
+    this.tagMap.set(tag.name, tag);
+  }
+
+  removeTag(tagName: TagName): void {
+    this.tagMap.delete(tagName);
+  }
+
+  setDescription(description: string | undefined) {
+    this.description = description;
+  }
+
+  toJson(): MetaJson {
+    const tagMapJson: TagMapJson = Object.fromEntries(
+      [...this.tagMap.values()].map((tag) => {
+        const sortedValueList = tag
+          .getValueList()
+          .toSorted((valueA, valueB) => {
+            return valueA.localeCompare(valueB);
+          });
+        return [tag.name, sortedValueList];
+      }),
     );
-  });
 
-  if (!isTagSetJson) {
-    throw new Error('Unexpected non tagSet');
+    const metaJson: MetaJson = {
+      id: this.id,
+      filePath: this.filePath,
+      tagMap: tagMapJson,
+      description: this.description,
+    };
+
+    return metaJson;
+  }
+
+  static fromJson(metaJson: MetaJson): Meta {
+    const {
+      id,
+      filePath,
+      description,
+      tagSet: tagSetJson,
+      tagMap: tagMapJson,
+    } = metaJson;
+
+    let tagMapEntryInputs: [TagName, TagValueList][];
+    if (tagMapJson !== undefined) {
+      tagMapEntryInputs = Object.entries(tagMapJson).map(
+        ([tagName, tagValueList]) => {
+          return [tagName, tagValueList];
+        },
+      );
+    } else if (tagSetJson !== undefined) {
+      tagMapEntryInputs = tagSetJson.map((element) => {
+        let tagName: TagName;
+        let tagValueList: TagValueList;
+
+        if (typeof element === 'string') {
+          tagName = element;
+          tagValueList = [];
+        } else {
+          tagName = element[0];
+          tagValueList = [element[1]];
+        }
+
+        return [tagName, tagValueList];
+      });
+    } else {
+      tagMapEntryInputs = [];
+    }
+
+    const tagMap = new TagMap(
+      tagMapEntryInputs.map(([tagName, tagValueList]) => {
+        const tag = new Tag(tagName, tagValueList);
+        return [tagName, tag];
+      }),
+    );
+
+    return new Meta({
+      id,
+      filePath,
+      tagMap,
+      description,
+    });
   }
 }
 
-function assertIsMetaJson(value: unknown): asserts value is MetaJson {
-  assertIsObject(value);
-  assertIsString(value.id);
-  assertIsString(value.filePath);
-  assertIsArray(value.tagSet);
-  assertIsTagSetJson(value.tagSet);
-  if (value.description !== undefined) {
-    assertIsString(value.description);
+const IdSetSchema = z.array(MetaIdSchema);
+type IdSetJson = z.infer<typeof IdSetSchema>;
+
+export class IdSet extends Set<string> {}
+
+const MetaByIdSchema = z.record(MetaIdSchema, MetaSchema);
+type MetaByJsonId = z.infer<typeof MetaByIdSchema>;
+
+type MetaById = Record<Meta['id'], Meta>;
+
+const PrimaryIndexSchema = z.record(TagNameSchema, IdSetSchema);
+type PrimaryIndexJson = z.infer<typeof PrimaryIndexSchema>;
+
+type PrimaryIndex = Record<TagName, IdSet>;
+
+type SecondaryIndexKey = `${TagName}:${TagValue}`;
+const SecondaryIndexKeySchema = z.custom<SecondaryIndexKey>(
+  (value: unknown) => {
+    return (
+      typeof value === 'string' && tl.secondaryIndexKey.parse(value).status
+    );
+  },
+);
+
+type SecondaryIndexJson = Record<SecondaryIndexKey, IdSetJson>;
+const SecondaryIndexSchema = z.custom<SecondaryIndexJson>((value: unknown) => {
+  return z.record(SecondaryIndexKeySchema, IdSetSchema).safeParse(value)
+    .success;
+});
+
+type SecondaryIndex = Record<SecondaryIndexKey, IdSet>;
+const getEntriesForRecordKeyedBySecondaryIndexKey = <T>(
+  record: Record<SecondaryIndexKey, T>,
+): [SecondaryIndexKey, T][] => {
+  return Object.entries(record) as [SecondaryIndexKey, T][];
+};
+const getRecordForEntriesWithSecondaryIndexKey = <T>(
+  entries: [SecondaryIndexKey, T][],
+): Record<SecondaryIndexKey, T> => {
+  return Object.fromEntries(entries);
+};
+
+const MetadataSchema = z.object({
+  metaById: MetaByIdSchema,
+  /** @deprecated */
+  idSetByTag: PrimaryIndexSchema.optional(),
+  /** @deprecated */
+  idSetByTagName: PrimaryIndexSchema.optional(),
+  primaryIndex: PrimaryIndexSchema.optional(),
+  secondaryIndex: SecondaryIndexSchema.optional(),
+});
+type MetadataJson = SetOptional<
+  SetFieldType<
+    z.infer<typeof MetadataSchema>,
+    'secondaryIndex',
+    SecondaryIndexJson
+  >,
+  'secondaryIndex'
+>;
+
+type MetadataInput = {
+  metaById: MetaById;
+  primaryIndex: PrimaryIndex;
+  secondaryIndex: SecondaryIndex;
+};
+class Metadata implements MetadataInput {
+  metaById: MetaById;
+  primaryIndex: PrimaryIndex;
+  secondaryIndex: SecondaryIndex;
+
+  constructor({ metaById, primaryIndex, secondaryIndex }: MetadataInput) {
+    this.metaById = metaById;
+    this.primaryIndex = primaryIndex;
+    this.secondaryIndex = secondaryIndex;
+  }
+
+  toJson(): MetadataJson {
+    const metaByIdJson: MetadataJson['metaById'] = Object.fromEntries(
+      Object.entries(this.metaById).map(([id, meta]) => {
+        const metaJson = meta.toJson();
+        return [id, metaJson];
+      }),
+    );
+
+    const primaryIndexJson: PrimaryIndexJson = Object.fromEntries(
+      Object.entries(this.primaryIndex)
+        .toSorted(([tagNameA], [tagNameB]) => {
+          return tagNameA.localeCompare(tagNameB);
+        })
+        .map(([tagName, idSet]) => {
+          return [tagName, [...idSet]];
+        }),
+    );
+
+    const secondaryIndexEntries = getEntriesForRecordKeyedBySecondaryIndexKey(
+      this.secondaryIndex,
+    );
+    const secondaryIndexJson: SecondaryIndexJson =
+      getRecordForEntriesWithSecondaryIndexKey(
+        secondaryIndexEntries
+          .toSorted(([secondaryIndexKeyA], [secondaryIndexKeyB]) => {
+            return secondaryIndexKeyA.localeCompare(secondaryIndexKeyB);
+          })
+          .map(([secondaryIndexKey, idSet]) => {
+            return [secondaryIndexKey, [...idSet]];
+          }),
+      );
+
+    const metadataJson: MetadataJson = {
+      metaById: metaByIdJson,
+      primaryIndex: primaryIndexJson,
+      secondaryIndex: secondaryIndexJson,
+    };
+
+    return metadataJson;
+  }
+
+  static fromJson(metadataJson: MetadataJson): Metadata {
+    const metaById: Metadata['metaById'] = Object.fromEntries(
+      Object.entries(metadataJson.metaById).map(([id, metaJson]) => {
+        const meta = Meta.fromJson(metaJson);
+        return [id, meta];
+      }),
+    );
+
+    const primaryIndexJson: PrimaryIndexJson =
+      metadataJson.idSetByTag ??
+      metadataJson.idSetByTagName ??
+      metadataJson.primaryIndex ??
+      {};
+    const primaryIndex: Metadata['primaryIndex'] = Object.fromEntries(
+      Object.entries(primaryIndexJson).map(([tagName, idList]) => {
+        return [tagName, new IdSet(idList)];
+      }),
+    );
+
+    const secondaryIndexJson: SecondaryIndexJson =
+      metadataJson.secondaryIndex ?? {};
+    const secondaryIndexJsonEntries =
+      getEntriesForRecordKeyedBySecondaryIndexKey(secondaryIndexJson);
+    const secondaryIndex: SecondaryIndex =
+      getRecordForEntriesWithSecondaryIndexKey(
+        secondaryIndexJsonEntries.map(
+          ([serializedIndexKey, idList]: [SecondaryIndexKey, IdSetJson]) => {
+            return [serializedIndexKey, new IdSet(idList)];
+          },
+        ),
+      );
+
+    return new Metadata({
+      metaById,
+      primaryIndex,
+      secondaryIndex,
+    });
   }
 }
 
-type MetadataJson = {
-  metaById: Record<Meta['id'], MetaJson>;
-  idSetByTagName?: Record<TagName, string[]>;
-  primaryIndex?: Record<TagName, string[]>;
-  secondaryIndex?: Record<SerializedTag, string[]>;
-};
+const ConfigSchema = z.object({
+  secondaryIndexes: IdSetSchema,
+});
+type ConfigJson = z.infer<typeof ConfigSchema>;
 
-type Metadata = {
-  metaById: Record<Meta['id'], Meta>;
-  primaryIndex: Record<TagName, IdSet>;
-  secondaryIndex: Record<SerializedTag, IdSet>;
+type ConfigInput = {
+  secondaryIndexes: Set<TagName>;
 };
+class Config {
+  secondaryIndexes: Set<TagName>;
 
-type ConfigJson = {
-  secondaryIndexes: string[];
-};
+  constructor({ secondaryIndexes }: ConfigInput) {
+    this.secondaryIndexes = secondaryIndexes;
+  }
 
-type Config = {
-  secondaryIndexes: Set<string>;
-};
+  static fromJson(configJson: ConfigJson) {
+    return new Config({
+      secondaryIndexes: new Set(configJson.secondaryIndexes),
+    });
+  }
+}
 
 export class MetadataManager {
-  data: Metadata = {
+  metadata: Metadata = new Metadata({
     metaById: {},
     primaryIndex: {},
     secondaryIndex: {},
-  };
+  });
 
-  config: Config = {
+  config = new Config({
     secondaryIndexes: new Set(),
-  };
+  });
 
   static METADATA_FILE_PATH = '.metadata';
   static CONFIG_FILE_PATH = '.notes-config';
 
   init(picsManager: PicturesManager) {
     const pictureList = picsManager.pictureList;
-    let { metadata: data, config } = this.read();
+    const { metadata, config } = this.read();
 
-    const guaranteedMetaById: Metadata['metaById'] = Object.fromEntries(
+    const guaranteedMetaById: MetaById = Object.fromEntries(
       pictureList.map((pic) => {
-        const guaranteedMeta: Meta = {
+        const guaranteedMeta = new Meta({
           id: pic.id,
           filePath: pic.filePath,
-          tagMap: data.metaById[pic.id]?.tagMap ?? new TagMap(),
-          description: data.metaById[pic.id]?.description,
-        };
+          tagMap: metadata.metaById[pic.id]?.tagMap ?? new TagMap(),
+          description: metadata.metaById[pic.id]?.description,
+        });
         return [pic.id, guaranteedMeta];
       }),
     );
@@ -156,7 +474,7 @@ export class MetadataManager {
     const pictureTagList = pictureList.flatMap((pic) => {
       const meta = guaranteedMetaById[pic.id];
       assertIsNotUndefined(meta);
-      return [...meta.tagMap.values()].map((tag) => {
+      return meta.getAllTags().map((tag) => {
         return {
           pic,
           tag,
@@ -164,226 +482,109 @@ export class MetadataManager {
       });
     });
 
-    const guaranteedPrimaryIndex: Record<TagName, IdSet> = {};
+    const guaranteedPrimaryIndex: PrimaryIndex = {};
     pictureTagList.forEach(({ pic, tag }) => {
-      const guaranteedIndex = guaranteedPrimaryIndex[tag.name] ?? new IdSet();
-      guaranteedIndex.add(pic.id);
-      guaranteedPrimaryIndex[tag.name] = guaranteedIndex;
+      const guaranteedIdSet = guaranteedPrimaryIndex[tag.name] ?? new IdSet();
+      guaranteedIdSet.add(pic.id);
+      guaranteedPrimaryIndex[tag.name] = guaranteedIdSet;
     });
 
-    const guaranteedSecondaryIndex: Record<SerializedTag, IdSet> = {};
+    const guaranteedSecondaryIndex: SecondaryIndex = {};
     pictureTagList
       .filter(({ tag }) => config.secondaryIndexes.has(tag.name))
-      .forEach(({ pic, tag }) => {
-        const guaranteedIndex =
-          guaranteedSecondaryIndex[tag.serialized] ?? new IdSet();
-        guaranteedIndex.add(pic.id);
-        guaranteedSecondaryIndex[tag.serialized] = guaranteedIndex;
-      });
-
-    pictureList
-      .flatMap((pic) => {
-        const meta = guaranteedMetaById[pic.id];
-        assertIsNotUndefined(meta);
-        return [...meta.tagMap].map(([tagName]) => {
+      .flatMap(({ pic, tag }) => {
+        return tag.getValueList().flatMap((value) => {
           return {
             pic,
-            tagName,
+            tag,
+            value,
           };
         });
       })
-      .forEach(({ pic, tagName }) => {
-        const guaranteedIdSet = guaranteedPrimaryIndex[tagName] ?? new IdSet();
+      .forEach(({ pic, tag, value }) => {
+        const key: SecondaryIndexKey = `${tag.name}:${value}`;
+
+        const guaranteedIdSet = guaranteedSecondaryIndex[key] ?? new IdSet();
         guaranteedIdSet.add(pic.id);
-        guaranteedPrimaryIndex[tagName] = guaranteedIdSet;
+        guaranteedSecondaryIndex[key] = guaranteedIdSet;
       });
 
-    const guaranteedData: Metadata = {
+    const guaranteedMetadata = new Metadata({
       metaById: guaranteedMetaById,
       primaryIndex: guaranteedPrimaryIndex,
       secondaryIndex: guaranteedSecondaryIndex,
-    };
+    });
 
-    this.write(guaranteedData);
-    this.data = guaranteedData;
+    this.write(guaranteedMetadata);
+    this.metadata = guaranteedMetadata;
     this.config = config;
   }
 
-  readMetadata(): Metadata {
+  private readMetadata(): Metadata {
     const text = fs.readFileSync(MetadataManager.METADATA_FILE_PATH, 'utf8');
+    const unknownData: unknown = JSON.parse(text);
 
-    const data: unknown = JSON.parse(text);
+    const metadataJson: MetadataJson = MetadataSchema.parse(unknownData);
+    const metadata = Metadata.fromJson(metadataJson);
 
-    assertIsObject(data);
-    assertIsObject(data.metaById);
-    data.primaryIndex =
-      data.idSetByTag ?? data.idSetByTagName ?? data.primaryIndex;
-    assertIsObject(data.primaryIndex);
-    data.secondaryIndex = data.secondaryIndex ?? {};
-    assertIsObject(data.secondaryIndex);
-
-    const modifiedMetaById: Metadata['metaById'] = Object.fromEntries(
-      Object.entries(data.metaById).map(([id, metaJson]) => {
-        assertIsMetaJson(metaJson);
-        const { tagSet, description, ...submeta } = metaJson;
-        return [
-          id,
-          {
-            ...submeta,
-            tagMap: new TagMap(
-              tagSet.map((tagJson) => {
-                const tag = new Tag(
-                  isString(tagJson) ? [tagJson, undefined] : tagJson,
-                );
-
-                return [tag.name, tag];
-              }),
-            ),
-            description,
-          } satisfies Meta,
-        ];
-      }),
-    );
-
-    const modifiedPrimaryIndex: Metadata['primaryIndex'] = Object.fromEntries(
-      Object.entries(data.primaryIndex).map(([tagName, idList]) => {
-        assertIsArray(idList);
-        assertIsStringArray(idList);
-        return [tagName, new IdSet(idList)];
-      }),
-    );
-
-    const modifiedSecondaryIndex: Metadata['secondaryIndex'] =
-      Object.fromEntries(
-        Object.entries(data.secondaryIndex).map(([serializedTag, idList]) => {
-          assertIsArray(idList);
-          assertIsStringArray(idList);
-          return [serializedTag, new IdSet(idList)];
-        }),
-      );
-
-    return {
-      metaById: modifiedMetaById,
-      primaryIndex: modifiedPrimaryIndex,
-      secondaryIndex: modifiedSecondaryIndex,
-    };
+    return metadata;
   }
 
-  readConfig(): Config {
+  private readConfig(): Config {
     const text = fs.readFileSync(MetadataManager.CONFIG_FILE_PATH, 'utf8');
+    const unknownData: unknown = JSON.parse(text);
 
-    const data = JSON.parse(text);
-
-    assertIsObject(data);
-    assertIsArray(data.secondaryIndexes);
-    assertIsStringArray(data.secondaryIndexes);
-
-    const config: Config = {
-      secondaryIndexes: new Set(data.secondaryIndexes),
-    };
+    const configJson = ConfigSchema.parse(unknownData);
+    const config = Config.fromJson(configJson);
 
     return config;
   }
 
-  read(): { metadata: Metadata; config: Config } {
+  private read(): { metadata: Metadata; config: Config } {
     return {
       metadata: this.readMetadata(),
       config: this.readConfig(),
     };
   }
 
-  write(data: Metadata) {
-    const modifiedMetaById: MetadataJson['metaById'] = Object.fromEntries(
-      Object.entries(data.metaById).map(([id, meta]) => {
-        const metaJson: MetaJson = {
-          id,
-          filePath: meta.filePath,
-          tagSet: [...meta.tagMap.values()]
-            .toSorted((tagA, tagB) => {
-              return tagA.name.localeCompare(tagB.name);
-            })
-            .map((tag) => {
-              if (tag.value === undefined) {
-                return tag.name;
-              }
-
-              return [tag.name, tag.value];
-            }),
-          description: meta.description,
-        };
-        return [id, metaJson];
-      }),
-    );
-
-    const modifiedPrimaryIndex: MetadataJson['primaryIndex'] =
-      Object.fromEntries(
-        Object.entries(data.primaryIndex)
-          .toSorted(([tagNameA], [tagNameB]) => {
-            return tagNameA.localeCompare(tagNameB);
-          })
-          .map(([tagName, idSet]) => {
-            return [tagName, [...idSet]];
-          }),
-      );
-
-    const modifiedSecondaryIndex: MetadataJson['primaryIndex'] =
-      Object.fromEntries(
-        Object.entries(data.secondaryIndex)
-          .toSorted(([serializedTagA], [serializedTagB]) => {
-            return serializedTagA.localeCompare(serializedTagB);
-          })
-          .map(([serializedTag, idSet]) => {
-            return [serializedTag, [...idSet]];
-          }),
-      );
-
-    const metadataJson: MetadataJson = {
-      metaById: modifiedMetaById,
-      primaryIndex: modifiedPrimaryIndex,
-      secondaryIndex: modifiedSecondaryIndex,
-    };
-
+  private write(metadata: Metadata): void {
+    const metadataJson = metadata.toJson();
     const text = JSON.stringify(metadataJson, null, 2);
+
     fs.writeFileSync(MetadataManager.METADATA_FILE_PATH, text);
   }
 
-  addTags(id: string, tagList: Tag[]) {
-    const meta = this.getMetaById(id);
+  modify(ids: MetaId[], operations: GenericModificationOperationNode[]) {
+    const metaList = ids.map((id) => this.getMetaById(id));
 
-    tagList.forEach((tag) => {
-      meta.tagMap.set(tag.name, tag);
+    operations.forEach((operation) => {
+      metaList.forEach((meta) => {
+        operation.apply(meta);
+      });
     });
 
-    this.write(this.data);
+    this.write(this.metadata);
   }
 
-  removeTags(id: string, tagNameList: string[]) {
-    const meta = this.getMetaById(id);
+  getIds(tagName: TagName, tagValueList: TagValueList): IdSet {
+    if (tagValueList.length > 0 && this.config.secondaryIndexes.has(tagName)) {
+      const pseudoTag = new Tag(tagName, tagValueList);
 
-    tagNameList.forEach((tag) => {
-      meta.tagMap.delete(tag);
-    });
+      const ids = pseudoTag.getSecondaryIndexKeys().flatMap((key) => {
+        const set = this.metadata.secondaryIndex[key] ?? new IdSet();
+        return [...set];
+      });
 
-    this.write(this.data);
-  }
-
-  updateDescription(id: string, description: string | undefined) {
-    const meta = this.getMetaById(id);
-    meta.description = description;
-
-    this.write(this.data);
-  }
-
-  getIds(tag: Tag): IdSet {
-    if (tag.value !== undefined && this.config.secondaryIndexes.has(tag.name)) {
-      return this.data.secondaryIndex[tag.serialized] ?? new IdSet();
+      const result = new IdSet(ids);
+      return result;
     }
 
-    return this.data.primaryIndex[tag.name] ?? new IdSet();
+    const result = this.metadata.primaryIndex[tagName] ?? new IdSet();
+    return result;
   }
 
   getMetaById(id: string): Meta {
-    const meta = this.data.metaById[id];
+    const meta = this.metadata.metaById[id];
     if (meta === undefined) {
       withExit(1, console.log, `Meta with id "${id}" does not exist`);
     }
@@ -391,13 +592,13 @@ export class MetadataManager {
   }
 
   hasMeta(id: string): boolean {
-    const meta = this.data.metaById[id];
+    const meta = this.metadata.metaById[id];
     return meta !== undefined;
   }
 
   rebuildIndexes() {
-    const metaTags = Object.values(this.data.metaById).flatMap((meta) => {
-      return [...meta.tagMap.values()].map((tag) => {
+    const metaTags = Object.values(this.metadata.metaById).flatMap((meta) => {
+      return meta.getAllTags().map((tag) => {
         return {
           meta,
           tag,
@@ -405,20 +606,31 @@ export class MetadataManager {
       });
     });
 
-    this.data.primaryIndex = {};
+    this.metadata.primaryIndex = {};
     metaTags.forEach(({ meta, tag }) => {
-      const idSet = this.data.primaryIndex[tag.name] ?? new IdSet();
+      const idSet = this.metadata.primaryIndex[tag.name] ?? new IdSet();
       idSet.add(meta.id);
-      this.data.primaryIndex[tag.name] = idSet;
+      this.metadata.primaryIndex[tag.name] = idSet;
     });
 
-    this.data.secondaryIndex = {};
-    metaTags.forEach(({ meta, tag }) => {
-      const idSet = this.data.secondaryIndex[tag.serialized] ?? new IdSet();
-      idSet.add(meta.id);
-      this.data.secondaryIndex[tag.serialized] = idSet;
-    });
+    this.metadata.secondaryIndex = {};
+    metaTags
+      .filter(({ tag }) => this.config.secondaryIndexes.has(tag.name))
+      .flatMap(({ meta, tag }) => {
+        return tag.getSecondaryIndexKeys().map((secondaryKey) => {
+          return {
+            meta,
+            tag,
+            secondaryKey,
+          };
+        });
+      })
+      .forEach(({ meta, secondaryKey }) => {
+        const idSet = this.metadata.secondaryIndex[secondaryKey] ?? new IdSet();
+        idSet.add(meta.id);
+        this.metadata.secondaryIndex[secondaryKey] = idSet;
+      });
 
-    this.write(this.data);
+    this.write(this.metadata);
   }
 }
