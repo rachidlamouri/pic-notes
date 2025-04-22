@@ -22,6 +22,21 @@ export class PicturesManager {
     this.pictureList = pictureList;
   }
 
+  static createPicture(data: Buffer) {
+    const filePath = posix.join(
+      this.PICS_DIR,
+      Picture.getTimestampedFileName(),
+    );
+
+    if (fs.existsSync(filePath)) {
+      throw new Error(`File path ${filePath} already exists`);
+    }
+
+    fs.writeFileSync(filePath, data);
+
+    return filePath;
+  }
+
   read() {
     debug('read');
     return fs.readdirSync(PicturesManager.PICS_DIR).map((fileName: string) => {

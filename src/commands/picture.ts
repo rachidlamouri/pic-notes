@@ -8,6 +8,10 @@ export class Picture {
   timestamp;
   id;
 
+  static getTimestampedFileName() {
+    return `${Timestamp.fromNow().formatted}.png`;
+  }
+
   static INPUT_FILE_NAME_REGEX =
     /^Screenshot (\d{4})-(\d{2})-(\d{2}) (\d{2})(\d{2})(\d{2})\.png$/;
   static TRANSFORMED_FILE_NAME_REGEX =

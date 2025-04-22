@@ -170,3 +170,22 @@ notes search "*"
 # Useful example:
 notes search "* - <tag-name>:~<value-unit>"
 ```
+
+## Auxiliary Commands
+
+### Backup
+
+Copies picture data and metadata to a backup folder.
+
+```sh
+notes backup
+```
+
+### Combine
+
+Combines two or more images into a single horizontal or vertical image.
+
+```sh
+# pass the --horizontal flag instead to make it horizontal
+notes combine <id1> <id2> [<id3>...] --vertical
+```
