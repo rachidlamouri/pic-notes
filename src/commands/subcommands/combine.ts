@@ -429,20 +429,35 @@ const encodeImage = (image: Image) => {
 
 export class Combine extends Command<CommandName.Combine> {
   name = CommandName.Combine as const;
-  description = 'Combines multiple images into one';
+  description =
+    'Combines multiple images into one. The "latest" flag will combine that last n1 images. The latest range is offset by "offset" (defaults to 0). ';
   examples = [
     '<id1> <id2> [<id3>...] --horizontal',
     '<id1> <id2> [<id3>...] --vertical',
+    '--latest <n1> [--offset <n2>] [--horizontal] [--vertical]',
   ];
 
   run(commandArgs: string[]): void {
     const {
-      positionals: inputIds,
-      options: { horizontal: isHorizontal, vertical: isVertical },
+      positionals: explicitInputIds,
+      options: {
+        horizontal: isHorizontal,
+        vertical: isVertical,
+        latest: latestInputIdCount,
+        offset: inputOffset,
+      },
     } = parseArgs({
       args: commandArgs,
       positionals: [],
       options: [
+        {
+          type: ParseableType.Number,
+          name: 'offset',
+        },
+        {
+          type: ParseableType.Number,
+          name: 'latest',
+        },
         {
           type: ParseableType.Boolean,
           name: 'horizontal',
@@ -454,8 +469,28 @@ export class Combine extends Command<CommandName.Combine> {
       ],
     } as const);
 
-    if (inputIds.length < 2) {
+    const hasExplicitInputIds = explicitInputIds.length > 0;
+    const hasImplicitInputIds = latestInputIdCount !== undefined;
+    const hasOffset = inputOffset !== undefined;
+
+    if (
+      (hasExplicitInputIds && hasImplicitInputIds) ||
+      (!hasExplicitInputIds && !hasImplicitInputIds)
+    ) {
+      console.log('Must provider either "latest" or image ids');
+      withExit(1, this.printUsage.bind(this));
+    }
+
+    if (hasExplicitInputIds && explicitInputIds.length < 2) {
       console.log('Must provide two or more image ids');
+      withExit(1, this.printUsage.bind(this));
+    }
+
+    if (
+      hasImplicitInputIds &&
+      (latestInputIdCount < 2 || latestInputIdCount > 10)
+    ) {
+      console.log('Latest must be a number between 2 and 10 inclusive');
       withExit(1, this.printUsage.bind(this));
     }
 
@@ -464,7 +499,26 @@ export class Combine extends Command<CommandName.Combine> {
       withExit(1, this.printUsage.bind(this));
     }
 
-    const parsedIds = inputIds.map((id) => Command.parseInputId(id));
+    if (hasOffset && !hasImplicitInputIds) {
+      console.log('Must provide "latest" when using "offset"');
+      withExit(1, this.printUsage.bind(this));
+    }
+
+    if (hasOffset && inputOffset < 0) {
+      console.log('Offset must be greater than or equal to zero');
+      withExit(1, this.printUsage.bind(this));
+    }
+
+    const offset = inputOffset ?? 0;
+    const latestInputIds = hasImplicitInputIds
+      ? Object.values(this.metadataManager.metadata.metaById)
+          .slice(-latestInputIdCount - offset, -offset || undefined)
+          .map((meta) => meta.id)
+      : [];
+
+    const allInputIds = [...explicitInputIds, ...latestInputIds];
+
+    const parsedIds = allInputIds.map((id) => Command.parseInputId(id));
     const metaList = parsedIds.map((id) => {
       return this.metadataManager.getMetaById(id);
     });
@@ -483,6 +537,7 @@ export class Combine extends Command<CommandName.Combine> {
       const finalImageWidth = subimages
         .map((image) => image.width)
         .reduce((sum, next) => sum + next, 0);
+
       const finalImageHeight = Math.max(
         ...subimages.map((image) => image.height),
       );
