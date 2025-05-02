@@ -9,6 +9,7 @@ export enum CommandName {
   Backup = 'backup',
   RebuildIndexes = 'rebuild-indexes',
   Combine = 'combine',
+  ListIndex = 'list-index',
 }
 
 const COMMAND_NAME_OPTIONS = Object.values(CommandName);

@@ -13,6 +13,7 @@ import { RebuildIndexes } from './subcommands/rebuildIndexes';
 import { MetadataManager } from './metadataManager';
 import { PicturesManager } from './picturesManager';
 import { Combine } from './subcommands/combine';
+import { ListIndex } from './subcommands/listIndex';
 
 export type Managers = {
   metadataManager: MetadataManager;
@@ -47,6 +48,7 @@ export const buildCommandsByName = (managers: Managers) => {
     [CommandName.Backup]: new Backup(managers),
     [CommandName.RebuildIndexes]: new RebuildIndexes(managers),
     [CommandName.Combine]: new Combine(managers),
+    [CommandName.ListIndex]: new ListIndex(managers),
   };
 
   return { commandsByName };
