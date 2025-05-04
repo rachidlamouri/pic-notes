@@ -1,6 +1,7 @@
 import { Timestamp } from './timestamp';
 import { assertIsNotNull } from '../utils/assertIsNotNull';
 import { assertIsNotUndefined } from '../utils/assertIsNotUndefined';
+import fs from 'fs';
 
 export class Picture {
   fileName;
@@ -18,13 +19,23 @@ export class Picture {
     /^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})\.png$/;
 
   constructor(fileName: string, filePath: string) {
+    const timestamp =
+      Picture.parseFileName(fileName) ?? Picture.parseLastModified(filePath);
+
+    this.fileName = fileName;
+    this.filePath = filePath;
+    this.timestamp = timestamp;
+    this.id = timestamp.hash;
+  }
+
+  static parseFileName(fileName: string) {
     const matchingRegex = [
       Picture.INPUT_FILE_NAME_REGEX,
       Picture.TRANSFORMED_FILE_NAME_REGEX,
     ].find((regex) => regex.test(fileName));
 
     if (matchingRegex === undefined) {
-      throw Error('Unknown file name format: ' + fileName);
+      return null;
     }
 
     const match = fileName.match(matchingRegex);
@@ -37,11 +48,13 @@ export class Picture {
     assertIsNotUndefined(minute);
     assertIsNotUndefined(second);
     const timestamp = new Timestamp(year, month, day, hour, minute, second);
+    return timestamp;
+  }
 
-    this.fileName = fileName;
-    this.filePath = filePath;
-    this.timestamp = timestamp;
-    this.id = timestamp.hash;
+  static parseLastModified(filePath: string) {
+    const stats = fs.statSync(filePath);
+    const timestamp = Timestamp.fromDate(stats.mtime);
+    return timestamp;
   }
 
   get transformedFileName() {
