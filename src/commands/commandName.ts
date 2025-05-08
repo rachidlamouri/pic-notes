@@ -10,6 +10,7 @@ export enum CommandName {
   RebuildIndexes = 'rebuild-indexes',
   Combine = 'combine',
   ListIndex = 'list-index',
+  Describe = 'describe',
 }
 
 const COMMAND_NAME_OPTIONS = Object.values(CommandName);
