@@ -9,6 +9,8 @@ export class Picture {
   timestamp;
   id;
 
+  hadValidFileName: boolean;
+
   static getTimestampedFileName() {
     return `${Timestamp.fromNow().formatted}.png`;
   }
@@ -19,13 +21,14 @@ export class Picture {
     /^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})\.png$/;
 
   constructor(fileName: string, filePath: string) {
-    const timestamp =
-      Picture.parseFileName(fileName) ?? Picture.parseLastModified(filePath);
+    const fileNameTimestamp = Picture.parseFileName(fileName);
+    const timestamp = fileNameTimestamp ?? Picture.parseLastModified(filePath);
 
     this.fileName = fileName;
     this.filePath = filePath;
     this.timestamp = timestamp;
     this.id = timestamp.hash;
+    this.hadValidFileName = fileNameTimestamp !== null;
   }
 
   static parseFileName(fileName: string) {

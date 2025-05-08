@@ -4,6 +4,7 @@ import fs from 'fs';
 import { posix } from 'path';
 import { withExit } from './withExit';
 import { printNoData } from './print';
+import { assertIsNotUndefined } from '../utils/assertIsNotUndefined';
 
 export class PicturesManager {
   pictureList: Picture[] = [];
@@ -39,10 +40,45 @@ export class PicturesManager {
 
   read() {
     debug('read');
-    return fs.readdirSync(PicturesManager.PICS_DIR).map((fileName: string) => {
-      const filePath = './' + posix.join(PicturesManager.PICS_DIR, fileName);
-      return new Picture(fileName, filePath);
+    const pictures = fs
+      .readdirSync(PicturesManager.PICS_DIR)
+      .map((fileName: string) => {
+        const filePath = './' + posix.join(PicturesManager.PICS_DIR, fileName);
+        return new Picture(fileName, filePath);
+      });
+
+    const picturesById: Record<string, Picture[]> = {};
+    pictures.forEach((picture) => {
+      const list = picturesById[picture.id] ?? [];
+      list.push(picture);
+      picturesById[picture.id] = list;
     });
+
+    const invalidEntries = Object.entries(picturesById).filter(([, list]) => {
+      return list.length > 1;
+    });
+
+    if (invalidEntries.length > 0) {
+      const formattedMessage = invalidEntries
+        .flatMap(([id, duplicates]) => {
+          const firstDuplicate = duplicates[0];
+          assertIsNotUndefined(firstDuplicate);
+
+          return [
+            `  ${firstDuplicate.transformedFileName}`,
+            ...duplicates.map((picture) => {
+              return `    ${picture.filePath}`;
+            }),
+          ];
+        })
+        .join('\n');
+
+      throw new Error(
+        `Found duplicates for the following pictures\n${formattedMessage}`,
+      );
+    }
+
+    return pictures;
   }
 
   transform(pictureList: Picture[]) {
