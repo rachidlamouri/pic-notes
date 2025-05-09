@@ -260,14 +260,14 @@ const decodeImage = (fileBuffer: Buffer) => {
 
   if (
     header.bitDepth !== 8 ||
-    header.colorType !== 6 ||
+    (header.colorType !== 6 && header.colorType !== 2) ||
     header.compressionMethod !== 0 ||
     header.filterMethod !== 0 ||
     header.interlaceMethod !== 0
   ) {
     console.log(header);
     throw new Error(
-      `Only truecolor with alpha color type (6) is supported with 8 bit depth, deflate compression, adaptive filtering, and no interlace. Received: ${header}`,
+      `Only color types 6 and 2 (with and without alpha respectively) is supported with 8 bit depth, deflate compression, adaptive filtering, and no interlace. Received: ${JSON.stringify(header, null, 2)}`,
     );
   }
 
@@ -277,7 +277,7 @@ const decodeImage = (fileBuffer: Buffer) => {
   const dataBuffer = zlib.inflateSync(compressedDataBuffer);
 
   const bytesPerFilter = 1;
-  const bytesPerPixel = 4;
+  const bytesPerPixel = header.colorType === 6 ? 4 : 3;
   const pixelsPerScanline = header.width;
   const bytesPerScanline = pixelsPerScanline * bytesPerPixel;
 
@@ -308,7 +308,9 @@ const decodeImage = (fileBuffer: Buffer) => {
             dataBuffer.readUInt8(offset + byteOffset + 0),
             dataBuffer.readUInt8(offset + byteOffset + 1),
             dataBuffer.readUInt8(offset + byteOffset + 2),
-            dataBuffer.readUInt8(offset + byteOffset + 3),
+            bytesPerPixel === 3
+              ? 255
+              : dataBuffer.readUInt8(offset + byteOffset + 3),
           ];
 
           return filteredPixel;
@@ -354,14 +356,16 @@ const decodeImage = (fileBuffer: Buffer) => {
           pixelIndex,
           2,
         ),
-        reconstructByte(
-          reconstructedScanlines,
-          filteredScanline.type,
-          filteredPixel[3],
-          scanlineIndex,
-          pixelIndex,
-          3,
-        ),
+        bytesPerPixel === 3
+          ? 255
+          : reconstructByte(
+              reconstructedScanlines,
+              filteredScanline.type,
+              filteredPixel[3],
+              scanlineIndex,
+              pixelIndex,
+              3,
+            ),
       ];
 
       reconstructedScanline.push(reconstructedPixel);
