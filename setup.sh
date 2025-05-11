@@ -1,21 +1,77 @@
 #!bash
 
-nvm use
+printTopLevel() {
+  FORMATTED=`echo "$1" | sed 's/^/- /'`
+  echo "$FORMATTED"
+}
 
-npm ci
-echo ""
+printIndented() {
+  FORMATTED=`echo "$1" | sed 's/^/  - /'`
+  echo "$FORMATTED"
+}
+
+installDependencies() {
+  npm ci
+  printf "\n"
+
+  sha1sum package-lock.json > "$SHA_FILE_PATH"
+}
+
+# Installs dependencies and then saves a hash of package-lock to a local file.
+# If the hash of package-lock file matches the value saved in package-lock.sha1 then it skips reinstalling dependencies
+# You can delete the node_moduels directory to force a reinstall or just run the install command manually
+checkDependencies() {
+  printTopLevel "Checking npm dependencies"
+  SHA_FILE_PATH=package-lock.sha1
+
+  SHA1_RESULT=`sha1sum "$SHA_FILE_PATH" 2>&1`
+  SHA1_CODE="$?"
+  printIndented "$SHA1_RESULT"
+  if test "$SHA1_CODE" != "0"; then
+    printIndented "sha1 mismatch; running install"
+    installDependencies
+  elif test ! -d "node_modules"; then
+    printIndented "missing node_modules; running install"
+    installDependencies
+  else
+    printIndented "sha1 matches; skipping install"
+  fi
+}
+
+switchNodeVersion() {
+  printTopLevel "Attempting to switch to correct node version"
+  NVM_USE_RESULT=`nvm use 2>&1`
+  NVM_USE_CODE=$?
+  printIndented  "$NVM_USE_RESULT"
+  return $NVM_USE_CODE
+}
+
+switchNodeVersion
+if test "$?" != "0"; then
+  printTopLevel "Attempting to install correct node version"
+
+  NVM_INSTALL_RESULT=`nvm install 2>&1`
+  NVM_INSTALL_CODE=$?
+  printIndented "$NVM_INSTALL_RESULT"
+
+  test "$NVM_INSTALL_CODE" = "0" || return 1
+
+  switchNodeVersion || return 1
+fi
+
+checkDependencies
 
 mkdir -p pics
-echo "Pics directory exists"
+printTopLevel "Pics directory exists"
 
 touch .metadata
-echo "Metadata file exists"
+printTopLevel "Metadata file exists"
 
 touch .notes-config
-echo "Notes config file exists"
+printTopLevel "Notes config file exists"
 
 mkdir -p backup
-echo "Backup directory exists"
+printTopLevel "Backup directory exists"
 
 alias notes="./node_modules/.bin/ts-node src/index.ts"
-echo "Created alias 'notes'"
+printTopLevel "Created alias 'notes'"
