@@ -40,9 +40,14 @@ checkDependencies() {
 
 switchNodeVersion() {
   printTopLevel "Attempting to switch to correct node version"
+
+  # TODO: need to figure out why running nvm use and saving it to a variable does not actually change the node version. It's running twice here so that it actually appleis and so that we can get the output
+  nvm use 2>&1 > /dev/null
   NVM_USE_RESULT=`nvm use 2>&1`
   NVM_USE_CODE=$?
+  test `cat .nvmrc` = `node -v` || return 1
   printIndented  "$NVM_USE_RESULT"
+
   return $NVM_USE_CODE
 }
 
