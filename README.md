@@ -75,10 +75,20 @@ notes tag <id> "<tag-name>:-<value-unit>"
 
 ### Set Description
 
+#### Inline
+
 The description must come at the end of the query
 
 ```sh
 notes tag <id> "<optional-subquery>#<description>"
+```
+
+#### Standalone Command
+
+Opens the description in VSCode and waits for the file to be closed before setting the description to the file contents.
+
+```sh
+notes describe <id>
 ```
 
 ### Remove Description
