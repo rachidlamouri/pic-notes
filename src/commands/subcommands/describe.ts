@@ -1,5 +1,6 @@
 import { ParseableType } from '../../parse-args/parseableType';
 import { parseArgs } from '../../parse-args/parseArgs';
+import { AddDescriptionOperationNode } from '../../tag-language/nodes/modification-nodes/addDescriptionOperationNode';
 import { assertIsString } from '../../utils/assertIsString';
 import { Command } from '../command';
 import { CommandName } from '../commandName';
@@ -59,7 +60,10 @@ export class Describe extends Command<CommandName.Describe> {
     execSync(`code --wait ${filename}`, { encoding: 'utf8' });
     const newDescription = fs.readFileSync(filename, 'utf8');
 
-    meta.setDescription(newDescription);
+    this.metadataManager.modify(
+      [id],
+      [new AddDescriptionOperationNode(newDescription)],
+    );
 
     withExit(0, printMeta, meta);
   }
