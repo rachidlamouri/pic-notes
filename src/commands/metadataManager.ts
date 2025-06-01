@@ -521,8 +521,12 @@ export class MetadataManager {
   }
 
   private readMetadata(): Metadata {
+    const defaultData: MetadataJson = {
+      metaById: {},
+    };
+
     const text = fs.readFileSync(MetadataManager.METADATA_FILE_PATH, 'utf8');
-    const unknownData: unknown = JSON.parse(text);
+    const unknownData: unknown = text === '' ? defaultData : JSON.parse(text);
 
     const metadataJson: MetadataJson = MetadataSchema.parse(unknownData);
     const metadata = Metadata.fromJson(metadataJson);
@@ -531,10 +535,14 @@ export class MetadataManager {
   }
 
   private readConfig(): Config {
-    const text = fs.readFileSync(MetadataManager.CONFIG_FILE_PATH, 'utf8');
-    const unknownData: unknown = JSON.parse(text);
+    const defaultData: ConfigJson = {
+      secondaryIndexes: [],
+    };
 
-    const configJson = ConfigSchema.parse(unknownData);
+    const text = fs.readFileSync(MetadataManager.CONFIG_FILE_PATH, 'utf8');
+    const unknownData: unknown = text === '' ? defaultData : JSON.parse(text);
+
+    const configJson: ConfigJson = ConfigSchema.parse(unknownData);
     const config = Config.fromJson(configJson);
 
     return config;
