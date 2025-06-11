@@ -36,7 +36,7 @@ export class ListIndex extends Command<CommandName.ListIndex> {
         return [tagName, new Set()] as const;
       }
 
-      const ids = this.metadataManager.metadata.primaryIndex[tagName];
+      const ids = this.metadataManager.metadata.primaryIndex[tagName]?.ids;
       assertIsNotUndefined(ids);
 
       const allValues = [...ids.values()]

@@ -272,10 +272,49 @@ type MetaByJsonId = z.infer<typeof MetaByIdSchema>;
 
 type MetaById = Record<Meta['id'], Meta>;
 
-const PrimaryIndexSchema = z.record(TagNameSchema, IdSetSchema);
+const IndexValueV1Schema = IdSetSchema;
+const IndexValueV2Schema = z.object({
+  description: z.string(),
+  ids: IdSetSchema,
+});
+const IndexValueSchema = z.union([IndexValueV1Schema, IndexValueV2Schema]);
+type IndexValueJson = z.infer<typeof IndexValueSchema>;
+
+class IndexValue {
+  description: string;
+  ids: IdSet;
+
+  constructor(description: string, ids: IdSet) {
+    this.description = description;
+    this.ids = ids;
+  }
+
+  static fromJson(json: IndexValueJson): IndexValue {
+    const description = Array.isArray(json) ? '' : json.description;
+    const ids = new IdSet(Array.isArray(json) ? json : json.ids);
+
+    const value = new IndexValue(description, ids);
+    return value;
+  }
+
+  toJson(): IndexValueJson {
+    const serializedIds = [...this.ids];
+
+    if (this.description === '') {
+      return serializedIds;
+    }
+
+    return {
+      description: this.description,
+      ids: serializedIds,
+    };
+  }
+}
+
+const PrimaryIndexSchema = z.record(TagNameSchema, IndexValueSchema);
 type PrimaryIndexJson = z.infer<typeof PrimaryIndexSchema>;
 
-type PrimaryIndex = Record<TagName, IdSet>;
+type PrimaryIndex = Record<TagName, IndexValue>;
 
 type SecondaryIndexKey = `${TagName}:${TagValue}`;
 const SecondaryIndexKeySchema = z.custom<SecondaryIndexKey>(
@@ -286,13 +325,13 @@ const SecondaryIndexKeySchema = z.custom<SecondaryIndexKey>(
   },
 );
 
-type SecondaryIndexJson = Record<SecondaryIndexKey, IdSetJson>;
+type SecondaryIndexJson = Record<SecondaryIndexKey, IndexValueJson>;
 const SecondaryIndexSchema = z.custom<SecondaryIndexJson>((value: unknown) => {
-  return z.record(SecondaryIndexKeySchema, IdSetSchema).safeParse(value)
+  return z.record(SecondaryIndexKeySchema, IndexValueSchema).safeParse(value)
     .success;
 });
 
-type SecondaryIndex = Record<SecondaryIndexKey, IdSet>;
+type SecondaryIndex = Record<SecondaryIndexKey, IndexValue>;
 const getEntriesForRecordKeyedBySecondaryIndexKey = <T>(
   record: Record<SecondaryIndexKey, T>,
 ): [SecondaryIndexKey, T][] => {
@@ -351,8 +390,8 @@ class Metadata implements MetadataInput {
         .toSorted(([tagNameA], [tagNameB]) => {
           return tagNameA.localeCompare(tagNameB);
         })
-        .map(([tagName, idSet]) => {
-          return [tagName, [...idSet]];
+        .map(([tagName, indexValue]) => {
+          return [tagName, indexValue.toJson()];
         }),
     );
 
@@ -365,8 +404,8 @@ class Metadata implements MetadataInput {
           .toSorted(([secondaryIndexKeyA], [secondaryIndexKeyB]) => {
             return secondaryIndexKeyA.localeCompare(secondaryIndexKeyB);
           })
-          .map(([secondaryIndexKey, idSet]) => {
-            return [secondaryIndexKey, [...idSet]];
+          .map(([secondaryIndexKey, indexValue]) => {
+            return [secondaryIndexKey, indexValue.toJson()];
           }),
       );
 
@@ -393,8 +432,8 @@ class Metadata implements MetadataInput {
       metadataJson.primaryIndex ??
       {};
     const primaryIndex: Metadata['primaryIndex'] = Object.fromEntries(
-      Object.entries(primaryIndexJson).map(([tagName, idList]) => {
-        return [tagName, new IdSet(idList)];
+      Object.entries(primaryIndexJson).map(([tagName, indexValueJson]) => {
+        return [tagName, IndexValue.fromJson(indexValueJson)];
       }),
     );
 
@@ -405,8 +444,11 @@ class Metadata implements MetadataInput {
     const secondaryIndex: SecondaryIndex =
       getRecordForEntriesWithSecondaryIndexKey(
         secondaryIndexJsonEntries.map(
-          ([serializedIndexKey, idList]: [SecondaryIndexKey, IdSetJson]) => {
-            return [serializedIndexKey, new IdSet(idList)];
+          ([serializedIndexKey, indexValueJson]: [
+            SecondaryIndexKey,
+            IndexValueJson,
+          ]) => {
+            return [serializedIndexKey, IndexValue.fromJson(indexValueJson)];
           },
         ),
       );
@@ -484,9 +526,15 @@ export class MetadataManager {
 
     const guaranteedPrimaryIndex: PrimaryIndex = {};
     pictureTagList.forEach(({ pic, tag }) => {
-      const guaranteedIdSet = guaranteedPrimaryIndex[tag.name] ?? new IdSet();
-      guaranteedIdSet.add(pic.id);
-      guaranteedPrimaryIndex[tag.name] = guaranteedIdSet;
+      const guaranteedIndexValue: IndexValue =
+        guaranteedPrimaryIndex[tag.name] ??
+        new IndexValue(
+          metadata.primaryIndex[tag.name]?.description ?? '',
+          new IdSet(),
+        );
+
+      guaranteedIndexValue.ids.add(pic.id);
+      guaranteedPrimaryIndex[tag.name] = guaranteedIndexValue;
     });
 
     const guaranteedSecondaryIndex: SecondaryIndex = {};
@@ -504,9 +552,14 @@ export class MetadataManager {
       .forEach(({ pic, tag, value }) => {
         const key: SecondaryIndexKey = `${tag.name}:${value}`;
 
-        const guaranteedIdSet = guaranteedSecondaryIndex[key] ?? new IdSet();
-        guaranteedIdSet.add(pic.id);
-        guaranteedSecondaryIndex[key] = guaranteedIdSet;
+        const guaranteedIndexValue =
+          guaranteedSecondaryIndex[key] ??
+          new IndexValue(
+            metadata.secondaryIndex[key]?.description ?? '',
+            new IdSet(),
+          );
+        guaranteedIndexValue.ids.add(pic.id);
+        guaranteedSecondaryIndex[key] = guaranteedIndexValue;
       });
 
     const guaranteedMetadata = new Metadata({
@@ -589,7 +642,7 @@ export class MetadataManager {
       const pseudoTag = new Tag(tagName, tagValueList);
 
       const ids = pseudoTag.getSecondaryIndexKeys().flatMap((key) => {
-        const set = this.metadata.secondaryIndex[key] ?? new IdSet();
+        const set = this.metadata.secondaryIndex[key]?.ids ?? new IdSet();
         return [...set];
       });
 
@@ -597,7 +650,7 @@ export class MetadataManager {
       return result;
     }
 
-    const result = this.metadata.primaryIndex[tagName] ?? new IdSet();
+    const result = this.metadata.primaryIndex[tagName]?.ids ?? new IdSet();
     return result;
   }
 
@@ -626,9 +679,11 @@ export class MetadataManager {
 
     this.metadata.primaryIndex = {};
     metaTags.forEach(({ meta, tag }) => {
-      const idSet = this.metadata.primaryIndex[tag.name] ?? new IdSet();
-      idSet.add(meta.id);
-      this.metadata.primaryIndex[tag.name] = idSet;
+      const indexValue =
+        this.metadata.primaryIndex[tag.name] ?? new IndexValue('', new IdSet());
+
+      indexValue.ids.add(meta.id);
+      this.metadata.primaryIndex[tag.name] = indexValue;
     });
 
     this.metadata.secondaryIndex = {};
@@ -644,9 +699,12 @@ export class MetadataManager {
         });
       })
       .forEach(({ meta, secondaryKey }) => {
-        const idSet = this.metadata.secondaryIndex[secondaryKey] ?? new IdSet();
-        idSet.add(meta.id);
-        this.metadata.secondaryIndex[secondaryKey] = idSet;
+        const indexValue =
+          this.metadata.secondaryIndex[secondaryKey] ??
+          new IndexValue('', new IdSet());
+
+        indexValue.ids.add(meta.id);
+        this.metadata.secondaryIndex[secondaryKey] = indexValue;
       });
 
     this.write(this.metadata);
