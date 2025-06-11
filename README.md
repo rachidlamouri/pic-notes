@@ -199,3 +199,42 @@ Combines two or more images into a single horizontal or vertical image.
 # pass the --horizontal flag instead to make it horizontal
 notes combine <id1> <id2> [<id3>...] --vertical
 ```
+
+### List Index
+
+Prints a list of all tag names or all tag values for a specific tag name.
+
+```sh
+# lists all tag names
+notes list-index
+
+# lists all values for the tag name "potato"
+notes list-index potato
+```
+
+### Document
+
+Opens a text editor for viewing user-generated documentation about tag names. Also works for tag values corresponding to secondary index tags. Save and close the text file to save the documentation.
+
+```sh
+# Example 1: List documentation for all primary index tag names
+notes document
+
+# Text File Example 1:
+# tag-name-1 | description 1
+# tag-name-2 |
+# tag-name-3 | description 3
+# tag-name-4 |
+
+
+# Example 2: List documentation for all secondary index keys for the tag "potato"
+notes document potato
+
+# Text File Example 1:
+# potato:tag-value-1 | description 1
+# potato:tag-value-2 |
+# potato:tag-value-3 | description 3
+# potato:tag-value-4 |
+
+
+```

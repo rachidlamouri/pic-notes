@@ -615,6 +615,26 @@ export class MetadataManager {
     fs.writeFileSync(MetadataManager.METADATA_FILE_PATH, text);
   }
 
+  updatePrimaryIndexDescriptions(descriptionByKey: Record<string, string>) {
+    Object.entries(this.metadata.primaryIndex).forEach(([key, indexValue]) => {
+      indexValue.description = descriptionByKey[key] ?? indexValue.description;
+    });
+
+    this.write(this.metadata);
+  }
+
+  updateSecondaryIndexDescriptions(
+    descriptionByKey: Record<SecondaryIndexKey, string>,
+  ) {
+    getEntriesForRecordKeyedBySecondaryIndexKey(
+      this.metadata.secondaryIndex,
+    ).forEach(([key, indexValue]) => {
+      indexValue.description = descriptionByKey[key] ?? indexValue.description;
+    });
+
+    this.write(this.metadata);
+  }
+
   modify(
     ids: MetaId[],
     operations: GenericModificationOperationNode[],

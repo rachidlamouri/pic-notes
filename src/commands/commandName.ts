@@ -11,6 +11,7 @@ export enum CommandName {
   Combine = 'combine',
   ListIndex = 'list-index',
   Describe = 'describe',
+  Document = 'document',
 }
 
 const COMMAND_NAME_OPTIONS = Object.values(CommandName);

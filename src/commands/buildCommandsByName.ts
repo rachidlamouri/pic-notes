@@ -15,6 +15,7 @@ import { PicturesManager } from './picturesManager';
 import { Combine } from './subcommands/combine';
 import { ListIndex } from './subcommands/listIndex';
 import { Describe } from './subcommands/describe';
+import { Document } from './subcommands/document';
 
 export type Managers = {
   metadataManager: MetadataManager;
@@ -51,6 +52,7 @@ export const buildCommandsByName = (managers: Managers) => {
     [CommandName.Combine]: new Combine(managers),
     [CommandName.ListIndex]: new ListIndex(managers),
     [CommandName.Describe]: new Describe(managers),
+    [CommandName.Document]: new Document(managers),
   };
 
   return { commandsByName };
