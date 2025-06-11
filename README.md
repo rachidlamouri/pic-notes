@@ -11,7 +11,7 @@
 Save a picture/screenshot to `pics/` then run:
 
 ```bash
-notes last
+notes get --latest
 ```
 
 ## Tag Value Unit Syntax
@@ -28,7 +28,7 @@ Modification and search queries both contain syntax of the form `<tag-name>:<val
 <tag-name>:<tag-value>
 
 #Multiple values
-<tag-name>:[<tag-value-1>, tag-value-2, tag-value-3]
+<tag-name>:[<tag-value-1> tag-value-2 tag-value-3]
 ```
 
 ## Modification Query Synytax
