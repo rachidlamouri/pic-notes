@@ -5,20 +5,29 @@ import { CommandName } from '../commandName';
 import { printMetaList } from '../print';
 import { withExit } from '../withExit';
 import { parseModification } from '../../tag-language/modificationParser';
+import { Search } from './search';
 
 export class Tag extends Command<CommandName.Tag> {
   name = CommandName.Tag as const;
   description = 'Add/remove tags and/or values. See README for syntax.';
   examples = [
-    '<id> <tag-query>',
-    '--latest <tag-query>',
-    '--ids [<id1> , <id2> [, ...<idN>]] --tags <tag-query>',
+    '<id> <tag-query> [--dry-run]',
+    '--latest <tag-query> [--dry-run]',
+    '--ids [<id1> , <id2> [, ...<idN>]] --query <tag-query> [--dry-run]',
+    '--search <search-query> --query <tag-query> [--dry-run]',
+    '[<id> [...<ids>]] [<tag-query>] [--latest] [--ids [<id1> [...<ids>]]] [--query <tag-query>] [--search <search-query>] [--dry-run]',
   ];
 
   run(commandArgs: string[]): void {
     const {
       positionals,
-      options: { latest, ids: inputIdList = [] },
+      options: {
+        latest: wantsLatestId,
+        ids: explicitOptionIds = [],
+        search: searchQuery,
+        'dry-run': isDryRun,
+        query: explicitTagQuery,
+      },
     } = parseArgs({
       args: commandArgs,
       positionals: [] as const,
@@ -31,80 +40,123 @@ export class Tag extends Command<CommandName.Tag> {
           name: 'latest',
           type: ParseableType.Boolean,
         },
-      ] as const,
-    });
-
-    let rawIdList: string[];
-    let positionalQueryTextList: string[];
-    if (latest) {
-      rawIdList = [this.picturesManager.lastPicture.id];
-      positionalQueryTextList = positionals;
-    } else if (inputIdList.length > 0) {
-      rawIdList = inputIdList;
-      positionalQueryTextList = positionals;
-    } else if (positionals[0] !== undefined) {
-      rawIdList = [positionals[0]];
-      positionalQueryTextList = positionals.slice(1);
-    } else {
-      withExit(1, () => {
-        console.log('Missing id');
-        this.printUsage();
-      });
-    }
-
-    const {
-      options: { query: optionQueryTextList = [] },
-    } = parseArgs({
-      args: commandArgs,
-      positionals: [] as const,
-      options: [
+        {
+          name: 'search',
+          type: ParseableType.String,
+        },
         {
           name: 'query',
-          type: ParseableType.StringList,
+          type: ParseableType.String,
+        },
+        {
+          name: 'dry-run',
+          type: ParseableType.Boolean,
         },
       ] as const,
     });
 
-    const positionalQuery = positionalQueryTextList.join(' ').trim();
-    const optionQuery = optionQueryTextList.join(' ').trim();
+    const firstNonIdIndex = positionals.findIndex((value) => {
+      return !Command.isIdParseable(value);
+    });
+    const explicitPositionalIds = positionals.filter((_, index) => {
+      return index < firstNonIdIndex;
+    });
+    const implicitTagQuery =
+      positionals.slice(firstNonIdIndex, positionals.length).join(' ') ||
+      undefined;
 
-    if (positionalQuery.length > 0 && optionQuery.length > 0) {
+    const explicitIds = [...explicitPositionalIds, ...explicitOptionIds].map(
+      (id) => Command.parseInputId(id),
+    );
+
+    const invalidExplicitIdList: string[] = [];
+    const validExplicitIdList: string[] = [];
+    explicitIds.forEach((id) => {
+      if (this.metadataManager.hasMeta(id)) {
+        validExplicitIdList.push(id);
+      } else {
+        invalidExplicitIdList.push(id);
+      }
+    });
+
+    if (invalidExplicitIdList.length > 0) {
+      withExit(
+        1,
+        console.log,
+        'The specified ids do not exist:',
+        invalidExplicitIdList.join(', '),
+      );
+    }
+
+    const latestIdSingleton = wantsLatestId
+      ? [this.picturesManager.lastPicture.id]
+      : [];
+
+    let searchQueryIds: string[];
+    if (searchQuery !== undefined) {
+      const { limitedList: metaList } = Search.performSearch(
+        searchQuery,
+        this.metadataManager,
+      );
+
+      if (metaList === null) {
+        throw new Error('Invalid search query');
+      }
+
+      if (metaList.length === 0) {
+        throw new Error(`Search returned 0 results.`);
+      }
+
+      const MAX = 10;
+      if (metaList.length > MAX) {
+        throw new Error(
+          `Search returned more than ${MAX} results. For saftey reasons the command has been aborted.`,
+        );
+      }
+
+      searchQueryIds = metaList.map((meta) => meta.id);
+    } else {
+      searchQueryIds = [];
+    }
+
+    if (implicitTagQuery !== undefined && explicitTagQuery !== undefined) {
       withExit(1, () => {
-        console.log('Invalid input');
+        console.log(
+          'Received both a positional and explicit tag query. Please only specify one.',
+        );
         this.printUsage();
       });
     }
 
-    const query = positionalQuery || optionQuery;
+    const tagQuery = implicitTagQuery ?? explicitTagQuery;
 
-    const invalidRawIds = rawIdList.filter((id) => !Command.isIdParseable(id));
-    if (invalidRawIds.length > 0) {
-      withExit(1, console.log, 'Invalid id format:', invalidRawIds.join(', '));
+    if (tagQuery === undefined) {
+      withExit(1, () => {
+        console.log('Missing tag query');
+        this.printUsage();
+      });
     }
 
-    const idList: string[] = rawIdList.map(Command.parseInputId);
+    const allIds = [
+      ...validExplicitIdList,
+      ...latestIdSingleton,
+      ...searchQueryIds,
+    ];
 
-    const invalidIdList: string[] = [];
-    const validIdList: string[] = [];
-    idList.forEach((id) => {
-      if (this.metadataManager.hasMeta(id)) {
-        validIdList.push(id);
-      } else {
-        invalidIdList.push(id);
-      }
-    });
-
-    if (invalidIdList.length > 0) {
-      withExit(1, console.log, 'Ids do not exist:', invalidIdList.join(', '));
+    if (allIds.length === 0) {
+      withExit(1, () => {
+        console.log('Must specify at least one id.');
+        this.printUsage();
+      });
     }
 
-    const operations = parseModification(query).operations;
-    this.metadataManager.modify(validIdList, operations);
+    const operations = parseModification(tagQuery).operations;
+    this.metadataManager.modify(allIds, operations, isDryRun);
 
     withExit(
       0,
       printMetaList,
-      validIdList.map((id) => this.metadataManager.getMetaById(id)),
+      allIds.map((id) => this.metadataManager.getMetaById(id)),
     );
   }
 }

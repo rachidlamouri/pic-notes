@@ -562,7 +562,11 @@ export class MetadataManager {
     fs.writeFileSync(MetadataManager.METADATA_FILE_PATH, text);
   }
 
-  modify(ids: MetaId[], operations: GenericModificationOperationNode[]) {
+  modify(
+    ids: MetaId[],
+    operations: GenericModificationOperationNode[],
+    isDryRun: boolean,
+  ) {
     const metaList = ids.map((id) => this.getMetaById(id));
 
     operations.forEach((operation) => {
@@ -571,7 +575,13 @@ export class MetadataManager {
       });
     });
 
-    this.write(this.metadata);
+    if (isDryRun) {
+      console.log('-------');
+      console.log('DRY RUN');
+      console.log('-------');
+    } else {
+      this.write(this.metadata);
+    }
   }
 
   getIds(tagName: TagName, tagValueList: TagValueList): IdSet {

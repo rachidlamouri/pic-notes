@@ -17,7 +17,7 @@ export class Describe extends Command<CommandName.Describe> {
   run(commandArgs: string[]): void {
     const {
       positionals: [inputId],
-      options: { latest },
+      options: { latest, 'dry-run': isDryRun },
     } = parseArgs({
       args: commandArgs,
       positionals: [
@@ -30,7 +30,11 @@ export class Describe extends Command<CommandName.Describe> {
           name: 'latest',
           type: ParseableType.Boolean,
         },
-      ],
+        {
+          name: 'dry-run',
+          type: ParseableType.Boolean,
+        },
+      ] as const,
     });
 
     if ((latest && inputId !== undefined) || (!latest && !inputId)) {
@@ -63,6 +67,7 @@ export class Describe extends Command<CommandName.Describe> {
     this.metadataManager.modify(
       [id],
       [new AddDescriptionOperationNode(newDescription)],
+      isDryRun,
     );
 
     withExit(0, printMeta, meta);

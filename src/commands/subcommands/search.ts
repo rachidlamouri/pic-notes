@@ -3,6 +3,7 @@ import { parseArgs } from '../../parse-args/parseArgs';
 import { parseSearch } from '../../tag-language/searchParser';
 import { Command } from '../command';
 import { CommandName } from '../commandName';
+import { MetadataManager } from '../metadataManager';
 import { printDivider, printMetaList } from '../print';
 import { withExit } from '../withExit';
 
@@ -76,6 +77,30 @@ export class Search extends Command<CommandName.Search> {
   //   printMetaList(metaList);
   // }
 
+  static performSearch(
+    query: string,
+    metadataManager: MetadataManager,
+    limit: number = Infinity,
+  ) {
+    const rootNode = parseSearch(query);
+
+    if (rootNode === null) {
+      return {
+        limitedList: null,
+        resultCount: 0,
+      };
+    }
+
+    const idSet = rootNode.compute(metadataManager);
+    const resultList = [...idSet].map((id) => metadataManager.getMetaById(id));
+    const limitedList = resultList.slice(0, limit);
+
+    return {
+      limitedList,
+      resultCount: resultList.length,
+    };
+  }
+
   run(commandArgs: string[]): void {
     const {
       positionals,
@@ -99,22 +124,20 @@ export class Search extends Command<CommandName.Search> {
     }
 
     const query = positionals.join(' ');
-    const rootNode = parseSearch(query);
+    const { limitedList, resultCount } = Search.performSearch(
+      query,
+      this.metadataManager,
+      limit,
+    );
 
-    if (rootNode === null) {
+    if (limitedList === null) {
       withExit(0, () => {
         this.printUsage();
       });
     }
 
-    const idSet = rootNode.compute(this.metadataManager);
-    const resultList = [...idSet].map((id) =>
-      this.metadataManager.getMetaById(id),
-    );
-    const limitedList = resultList.slice(0, limit);
-
     withExit(0, () => {
-      console.log(`Found ${resultList.length}; Showing ${limitedList.length}`);
+      console.log(`Found ${resultCount}; Showing ${limitedList.length}`);
       printDivider();
       printMetaList(limitedList);
     });
