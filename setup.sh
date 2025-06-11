@@ -75,6 +75,9 @@ printTopLevel "Metadata file exists"
 touch .notes-config
 printTopLevel "Notes config file exists"
 
+touch TODO.md
+printTopLevel "TODO file exists"
+
 mkdir -p backup
 printTopLevel "Backup directory exists"
 

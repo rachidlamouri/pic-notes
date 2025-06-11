@@ -496,6 +496,7 @@ export class MetadataManager {
 
   static METADATA_FILE_PATH = '.metadata';
   static CONFIG_FILE_PATH = '.notes-config';
+  static TODO_FILE_PATH = 'TODO.md';
 
   init(picsManager: PicturesManager) {
     const pictureList = picsManager.pictureList;

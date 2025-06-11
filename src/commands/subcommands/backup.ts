@@ -30,6 +30,14 @@ export class Backup extends Command<CommandName.Backup> {
       MetadataManager.METADATA_FILE_PATH,
       posix.join(destinationDirectoryName, MetadataManager.METADATA_FILE_PATH),
     );
+    fs.cpSync(
+      MetadataManager.CONFIG_FILE_PATH,
+      posix.join(destinationDirectoryName, MetadataManager.CONFIG_FILE_PATH),
+    );
+    fs.cpSync(
+      MetadataManager.TODO_FILE_PATH,
+      posix.join(destinationDirectoryName, MetadataManager.TODO_FILE_PATH),
+    );
 
     withExit(0, console.log, 'Backed up to: ' + destinationDirectoryName);
   }
