@@ -22,11 +22,6 @@ export class Backup extends Command<CommandName.Backup> {
 
     fs.mkdirSync(destinationDirectoryName);
     fs.cpSync(
-      PicturesManager.PICS_DIR,
-      posix.join(destinationDirectoryName, PicturesManager.PICS_DIR),
-      { recursive: true },
-    );
-    fs.cpSync(
       MetadataManager.METADATA_FILE_PATH,
       posix.join(destinationDirectoryName, MetadataManager.METADATA_FILE_PATH),
     );
@@ -35,8 +30,14 @@ export class Backup extends Command<CommandName.Backup> {
       posix.join(destinationDirectoryName, MetadataManager.CONFIG_FILE_PATH),
     );
     fs.cpSync(
-      MetadataManager.TODO_FILE_PATH,
-      posix.join(destinationDirectoryName, MetadataManager.TODO_FILE_PATH),
+      MetadataManager.FREEFORM_FILE_PATH,
+      posix.join(destinationDirectoryName, MetadataManager.FREEFORM_FILE_PATH),
+      { recursive: true },
+    );
+    fs.cpSync(
+      PicturesManager.PICS_DIR,
+      posix.join(destinationDirectoryName, PicturesManager.PICS_DIR),
+      { recursive: true },
     );
 
     withExit(0, console.log, 'Backed up to: ' + destinationDirectoryName);

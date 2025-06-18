@@ -14,6 +14,10 @@ Save a picture/screenshot to `pics/` then run:
 notes get --latest
 ```
 
+## Freeform Notes
+
+Use the [./freeform](./freeform/) directory to save any personal supplemental files. This folder gets saved by the `backup` command as well.
+
 ## Tag Value Unit Syntax
 
 Modification and search queries both contain syntax of the form `<tag-name>:<value-unit>`. The syntax for a value unit is as follows:

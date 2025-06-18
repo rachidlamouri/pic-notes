@@ -75,11 +75,14 @@ printTopLevel "Metadata file exists"
 touch .notes-config
 printTopLevel "Notes config file exists"
 
-touch TODO.md
-printTopLevel "TODO file exists"
-
 mkdir -p backup
 printTopLevel "Backup directory exists"
+
+if [[ ! -d "freeform" ]]; then
+  mkdir -p "freeform"
+  printf "# Freeform\n\nUse this folder however you wish. When you use \`notes backup\` this folder will be saved as well.\n" > "freeform/FREEFORM.md"
+fi
+printTopLevel "Freeform directory exists"
 
 alias notes="./node_modules/.bin/ts-node src/index.ts"
 printTopLevel "Created alias 'notes'"
