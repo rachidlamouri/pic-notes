@@ -12,6 +12,7 @@ import fs from 'fs';
 import zlib from 'node:zlib';
 import { PicturesManager } from '../picturesManager';
 import { withExit } from '../withExit';
+import { readFile } from 'fs/promises';
 
 type Chunk = {
   isCritical: boolean;
@@ -527,70 +528,79 @@ export class Combine extends Command<CommandName.Combine> {
       return this.metadataManager.getMetaById(id);
     });
 
-    const subimages = metaList.map((meta) => {
-      console.log(`  decoding ${meta.filePath}`);
-      const buffer = fs.readFileSync(meta.filePath);
-      const image = decodeImage(buffer);
-      return image;
-    });
-
-    const DEFAULT_PIXEL: Pixel = [0, 0, 0, 0];
-
-    let finalImage: Image;
-    if (isHorizontal) {
-      const finalImageWidth = subimages
-        .map((image) => image.width)
-        .reduce((sum, next) => sum + next, 0);
-
-      const finalImageHeight = Math.max(
-        ...subimages.map((image) => image.height),
-      );
-      const scanlines = Array.from({ length: finalImageHeight }).map(
-        (_, lineIndex) => {
-          return subimages.flatMap((image) => {
-            const subimageLine =
-              image.scanlines[lineIndex] ??
-              Array.from({ length: image.width }).map(() => DEFAULT_PIXEL);
-
-            return subimageLine;
-          });
-        },
-      );
-
-      finalImage = {
-        width: finalImageWidth,
-        height: finalImageHeight,
-        scanlines,
-      };
-    } else {
-      const finalImageWidth = Math.max(
-        ...subimages.map((image) => image.width),
-      );
-      const finalImageHeight = subimages
-        .map((image) => image.height)
-        .reduce((sum, next) => sum + next, 0);
-
-      const templateRow = Array.from({ length: finalImageWidth }).map(
-        (_, index) => index,
-      );
-
-      finalImage = {
-        width: finalImageWidth,
-        height: finalImageHeight,
-        scanlines: subimages.flatMap((image) => {
-          return image.scanlines.map((scanline) => {
-            return templateRow.map((index) => {
-              return scanline[index] ?? DEFAULT_PIXEL;
-            });
+    const doAsync = async () => {
+      const subimages = await Promise.all(
+        metaList.map((meta) => {
+          console.log(`  decoding ${meta.filePath}`);
+          return readFile(meta.filePath).then((buffer) => {
+            const image = decodeImage(buffer);
+            return image;
           });
         }),
-      };
-    }
+      );
 
-    console.log('  encoding final image');
-    const encodedFinalImage = encodeImage(finalImage);
-    const filePath = PicturesManager.createPicture(encodedFinalImage);
+      const DEFAULT_PIXEL: Pixel = [0, 0, 0, 0];
 
-    console.log(`  encoded final image ./${filePath}`);
+      let finalImage: Image;
+      if (isHorizontal) {
+        const finalImageWidth = subimages
+          .map((image) => image.width)
+          .reduce((sum, next) => sum + next, 0);
+
+        const finalImageHeight = Math.max(
+          ...subimages.map((image) => image.height),
+        );
+        const scanlines = Array.from({ length: finalImageHeight }).map(
+          (_, lineIndex) => {
+            return subimages.flatMap((image) => {
+              const subimageLine =
+                image.scanlines[lineIndex] ??
+                Array.from({ length: image.width }).map(() => DEFAULT_PIXEL);
+
+              return subimageLine;
+            });
+          },
+        );
+
+        finalImage = {
+          width: finalImageWidth,
+          height: finalImageHeight,
+          scanlines,
+        };
+      } else {
+        const finalImageWidth = Math.max(
+          ...subimages.map((image) => image.width),
+        );
+        const finalImageHeight = subimages
+          .map((image) => image.height)
+          .reduce((sum, next) => sum + next, 0);
+
+        const templateRow = Array.from({ length: finalImageWidth }).map(
+          (_, index) => index,
+        );
+
+        finalImage = {
+          width: finalImageWidth,
+          height: finalImageHeight,
+          scanlines: subimages.flatMap((image) => {
+            return image.scanlines.map((scanline) => {
+              return templateRow.map((index) => {
+                return scanline[index] ?? DEFAULT_PIXEL;
+              });
+            });
+          }),
+        };
+      }
+
+      console.log('  encoding final image');
+      const encodedFinalImage = encodeImage(finalImage);
+      const filePath = PicturesManager.createPicture(encodedFinalImage);
+
+      console.log(`  encoded final image ./${filePath}`);
+    };
+
+    doAsync().catch((error) => {
+      console.log(error);
+    });
   }
 }
