@@ -41,10 +41,12 @@ const tagLanguage = createLanguage<TagLanguage>(parserDebugger, {
     return P.seq(
       // -
       P.string('['),
+      P.optWhitespace,
       l.tagValueListExpression,
+      P.optWhitespace,
       P.string(']'),
     ).map((result) => {
-      const valueList = result[1];
+      const valueList = result[2];
       return valueList;
     });
   },

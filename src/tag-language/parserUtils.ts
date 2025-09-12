@@ -23,7 +23,7 @@ class ParserDebugger {
     const indent = this.indent;
     debug(indent.toString().padStart(2, ' '), ' |'.repeat(indent), ...args);
 
-    if (indent > 30) {
+    if (indent > 100) {
       throw Error('Possible infinite recursion detected');
     }
   }

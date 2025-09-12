@@ -14,7 +14,7 @@ export class Tag extends Command<CommandName.Tag> {
     '<id> <tag-query> [--dry-run]',
     '--latest <tag-query> [--dry-run]',
     '--ids [<id1> , <id2> [, ...<idN>]] --query <tag-query> [--dry-run]',
-    '--search <search-query> --query <tag-query> [--dry-run]',
+    '--search <search-query> --query <tag-query> [--count <number>] [--dry-run]',
     '[<id> [...<ids>]] [<tag-query>] [--latest] [--ids [<id1> [...<ids>]]] [--query <tag-query>] [--search <search-query>] [--dry-run]',
   ];
 
@@ -27,6 +27,7 @@ export class Tag extends Command<CommandName.Tag> {
         search: searchQuery,
         'dry-run': isDryRun,
         query: explicitTagQuery,
+        count: expectedCount,
       },
     } = parseArgs({
       args: commandArgs,
@@ -49,11 +50,25 @@ export class Tag extends Command<CommandName.Tag> {
           type: ParseableType.String,
         },
         {
+          name: 'count',
+          type: ParseableType.Number,
+        },
+        {
           name: 'dry-run',
           type: ParseableType.Boolean,
         },
       ] as const,
     });
+
+    if (expectedCount !== undefined && searchQuery === undefined) {
+      throw new Error('Must provide a search query when using "--count"');
+    }
+
+    if (searchQuery !== undefined && expectedCount === undefined && !isDryRun) {
+      throw new Error(
+        'When a search query is provided you must pass "--count", "--dry-run" or both.',
+      );
+    }
 
     const firstNonIdIndex = positionals.findIndex((value) => {
       return !Command.isIdParseable(value);
@@ -107,10 +122,13 @@ export class Tag extends Command<CommandName.Tag> {
         throw new Error(`Search returned 0 results.`);
       }
 
-      const MAX = 10;
-      if (metaList.length > MAX) {
+      if (
+        !isDryRun &&
+        expectedCount !== undefined &&
+        metaList.length !== expectedCount
+      ) {
         throw new Error(
-          `Search returned more than ${MAX} results. For saftey reasons the command has been aborted.`,
+          `Expected ${expectedCount} results, but received ${metaList.length}`,
         );
       }
 
