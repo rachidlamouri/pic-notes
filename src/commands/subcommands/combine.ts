@@ -40,7 +40,6 @@ const toUInt32 = (value: number) => {
 };
 
 const encodeCrc = (type: string, data: Buffer) => {
-  // @ts-ignore -- need to find the tsconfig that has updated node types
   return zlib.crc32(data, zlib.crc32(type));
 };
 
