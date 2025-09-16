@@ -13,6 +13,7 @@ import zlib from 'node:zlib';
 import { PicturesManager } from '../picturesManager';
 import { withExit } from '../withExit';
 import { readFile } from 'fs/promises';
+import { Timer } from '../../utils/timer';
 
 type Chunk = {
   isCritical: boolean;
@@ -382,11 +383,14 @@ const decodeImage = (fileBuffer: Buffer) => {
 };
 
 const encodeImage = (image: Image) => {
+  const encodeTimer = new Timer().restart();
   const crc = Buffer.from(new Uint8Array(4)).fill(255);
 
   const signature = Buffer.from(
     expectedPNGSignature.split('').map((letter) => letter.charCodeAt(0)),
   );
+
+  encodeTimer.logElapsedSeconds('signature');
 
   const headerData = Buffer.concat([
     toUInt32(image.width),
@@ -395,6 +399,8 @@ const encodeImage = (image: Image) => {
     Buffer.from([8, 6, 0, 0, 0]),
   ]);
 
+  encodeTimer.logElapsedSeconds('header data');
+
   const headerChunk = Buffer.concat([
     toUInt32(headerData.length),
     Buffer.from('IHDR'),
@@ -402,24 +408,37 @@ const encodeImage = (image: Image) => {
     toUInt32(encodeCrc('IHDR', headerData)),
   ]);
 
-  const filteredScanlines = image.scanlines.flatMap((scanline) => [
-    0,
-    ...scanline.flat(),
-  ]);
+  encodeTimer.logElapsedSeconds('header chunk');
+
+  const filteredScanlines: number[] = [];
+  for (const scanline of image.scanlines) {
+    filteredScanlines.push(0);
+    for (const pixel of scanline) {
+      for (const value of pixel) {
+        filteredScanlines.push(value);
+      }
+    }
+  }
+
+  encodeTimer.logElapsedSeconds('filtered scanlines');
   const dataBuffer = Buffer.from(filteredScanlines);
+  encodeTimer.logElapsedSeconds('data buffer');
   const compressedBuffer = zlib.deflateSync(dataBuffer);
+  encodeTimer.logElapsedSeconds('compressed buffer');
   const dataChunk = Buffer.concat([
     toUInt32(compressedBuffer.length),
     Buffer.from('IDAT'),
     compressedBuffer,
     toUInt32(encodeCrc('IDAT', compressedBuffer)),
   ]);
+  encodeTimer.logElapsedSeconds('data chunk');
 
   const endChunk = Buffer.concat([
     toUInt32(0),
     Buffer.from('IEND'),
     toUInt32(encodeCrc('IEND', Buffer.from([]))),
   ]);
+  encodeTimer.logElapsedSeconds('end chunk');
 
   const imageBuffer = Buffer.concat([
     signature,
@@ -427,6 +446,8 @@ const encodeImage = (image: Image) => {
     dataChunk,
     endChunk,
   ]);
+
+  encodeTimer.logElapsedSeconds('image buffer');
 
   return imageBuffer;
 };
@@ -527,16 +548,22 @@ export class Combine extends Command<CommandName.Combine> {
       return this.metadataManager.getMetaById(id);
     });
 
+    const allDecodeTimer = new Timer().restart();
     const doAsync = async () => {
       const subimages = await Promise.all(
         metaList.map((meta) => {
+          const decodeTimer = new Timer().restart();
           console.log(`  decoding ${meta.filePath}`);
           return readFile(meta.filePath).then((buffer) => {
+            decodeTimer.logElapsedSeconds(
+              `FINSISHED DECODING ${meta.filePath}`,
+            );
             const image = decodeImage(buffer);
             return image;
           });
         }),
       );
+      allDecodeTimer.logElapsedSeconds('FINISHED DECODING ALL');
 
       const DEFAULT_PIXEL: Pixel = [0, 0, 0, 0];
 
