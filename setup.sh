@@ -78,6 +78,9 @@ printTopLevel "Notes config file exists"
 mkdir -p backup
 printTopLevel "Backup directory exists"
 
+mkdir -p tmp
+printTopLevel "Temp directory exists"
+
 if [[ ! -d "freeform" ]]; then
   mkdir -p "freeform"
   printf "# Freeform\n\nUse this folder however you wish. When you use \`notes backup\` this folder will be saved as well.\n" > "freeform/FREEFORM.md"

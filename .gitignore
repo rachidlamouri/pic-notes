@@ -4,6 +4,7 @@ backup/
 freeform/
 node_modules/
 pics/
+tmp/
 DESCRIBE.md
 DOCUMENT.txt
 package-lock.sha1

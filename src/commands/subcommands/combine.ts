@@ -14,6 +14,8 @@ import { PicturesManager } from '../picturesManager';
 import { withExit } from '../withExit';
 import { readFile } from 'fs/promises';
 import { Timer } from '../../utils/timer';
+import { assertIsNotUndefined } from '../../utils/assertIsNotUndefined';
+import { printMetaList } from '../print';
 
 type Chunk = {
   isCritical: boolean;
@@ -455,10 +457,10 @@ const encodeImage = (image: Image) => {
 export class Combine extends Command<CommandName.Combine> {
   name = CommandName.Combine as const;
   description =
-    'Combines multiple images into one. The "latest" flag will combine that last n1 images. The latest range is offset by "offset" (defaults to 0). ';
+    'Combines multiple images into one. The "latest" flag will combine the last n1 images from earliest to latest. The latest range is offset by "offset" (defaults to 0). The append flag will overwrite the first image and preserve its metadata.';
   examples = [
-    '<id1> <id2> [<id3>...] --horizontal',
-    '<id1> <id2> [<id3>...] --vertical',
+    '<id1> <id2> [<id3>...] [--append] --horizontal',
+    '<id1> <id2> [<id3>...] [--append] --vertical',
     '--latest <n1> [--offset <n2>] [--horizontal] [--vertical]',
   ];
 
@@ -470,6 +472,7 @@ export class Combine extends Command<CommandName.Combine> {
         vertical: isVertical,
         latest: latestInputIdCount,
         offset: inputOffset,
+        append: isAppend,
       },
     } = parseArgs({
       args: commandArgs,
@@ -490,6 +493,10 @@ export class Combine extends Command<CommandName.Combine> {
         {
           type: ParseableType.Boolean,
           name: 'vertical',
+        },
+        {
+          type: ParseableType.Boolean,
+          name: 'append',
         },
       ],
     } as const);
@@ -553,7 +560,7 @@ export class Combine extends Command<CommandName.Combine> {
       const subimages = await Promise.all(
         metaList.map((meta) => {
           const decodeTimer = new Timer().restart();
-          console.log(`  decoding ${meta.filePath}`);
+          console.log(`  decoding: ${meta.filePath}`);
           return readFile(meta.filePath).then((buffer) => {
             decodeTimer.logElapsedSeconds(
               `FINSISHED DECODING ${meta.filePath}`,
@@ -620,9 +627,28 @@ export class Combine extends Command<CommandName.Combine> {
 
       console.log('  encoding final image');
       const encodedFinalImage = encodeImage(finalImage);
-      const filePath = PicturesManager.createPicture(encodedFinalImage);
 
-      console.log(`  encoded final image ./${filePath}`);
+      let newImageFilePath;
+      if (isAppend) {
+        const [firstMeta] = metaList;
+        assertIsNotUndefined(firstMeta);
+        const backupFilePath = PicturesManager.createTemporaryBackup(
+          firstMeta.filePath,
+        );
+        console.log(`  original image backup: ./${backupFilePath}`);
+        newImageFilePath = firstMeta.filePath;
+        PicturesManager.overwritePicture(newImageFilePath, encodedFinalImage);
+        this.metadataManager.merge(metaList);
+      } else {
+        newImageFilePath = PicturesManager.createPicture(encodedFinalImage);
+      }
+
+      console.log(`  encoded final image: ${newImageFilePath}`);
+
+      if (isAppend) {
+        console.log();
+        printMetaList(metaList);
+      }
     };
 
     doAsync().catch((error) => {

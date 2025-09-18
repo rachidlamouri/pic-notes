@@ -31,7 +31,15 @@ export const printMeta = (meta: Meta, includeDivider = false) => {
   console.log('File |', meta.filePath);
   console.log('Tags |', tags.map((tag) => tag.serialize()).join(', '));
   if (meta.description !== undefined) {
-    console.log('Desc |', meta.description);
+    const formattedDescription = meta.description
+      .split('\n')
+      .map((line, index) => {
+        const prefix = index === 0 ? 'Desc | ' : '     | ';
+        return `${prefix}${line}`;
+      })
+      .join('\n');
+
+    console.log(formattedDescription);
   }
 
   if (includeDivider) {

@@ -11,6 +11,8 @@ export class PicturesManager {
 
   static PICS_DIR = './pics';
 
+  static TMP_DIR = './tmp';
+
   init() {
     debug('init');
 
@@ -21,6 +23,16 @@ export class PicturesManager {
     }
 
     this.pictureList = pictureList;
+  }
+
+  static overwritePicture(filePath: string, data: Buffer) {
+    if (!fs.existsSync(filePath)) {
+      throw new Error(
+        `File path ${filePath} does not exist and can't be overwritten`,
+      );
+    }
+
+    fs.writeFileSync(filePath, data);
   }
 
   static createPicture(data: Buffer) {
@@ -36,6 +48,18 @@ export class PicturesManager {
     fs.writeFileSync(filePath, data);
 
     return filePath;
+  }
+
+  static createTemporaryBackup(filePath: string): string {
+    const fileName = posix.basename(filePath);
+    const outputFilePath = posix.join(this.TMP_DIR, fileName);
+
+    if (fs.existsSync(outputFilePath)) {
+      throw new Error(`Backup destination already exists: ${outputFilePath}`);
+    }
+
+    fs.copyFileSync(filePath, outputFilePath);
+    return outputFilePath;
   }
 
   read() {

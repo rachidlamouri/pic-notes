@@ -13,7 +13,7 @@ import { assertHasExactlyZero } from '../utils/assertHasExactlyZero';
 import { unknown, z } from 'zod';
 import { HighlightSpanKind } from 'typescript';
 import { tl } from '../tag-language/tagParser';
-import { Replace, SetFieldType, SetOptional } from 'type-fest';
+import { SetFieldType, SetOptional } from 'type-fest';
 import {
   GenericModificationOperationNode,
   ModificationOperationNode,
@@ -727,6 +727,39 @@ export class MetadataManager {
         indexValue.ids.add(meta.id);
         this.metadata.secondaryIndex[secondaryKey] = indexValue;
       });
+
+    this.write(this.metadata);
+  }
+
+  merge(metaList: Meta[]) {
+    const [firstMeta, ...otherMetaList] = metaList;
+    assertIsNotUndefined(firstMeta);
+
+    otherMetaList.forEach((meta) => {
+      meta.getAllTags().forEach((tag) => {
+        firstMeta.setTag(
+          new Tag(tag.name, [
+            ...(firstMeta.hasTag(tag.name)
+              ? firstMeta.getTag(tag.name).getValueList()
+              : []),
+            ...tag.getValueList(),
+          ]),
+        );
+      });
+    });
+
+    firstMeta.description = metaList
+      .map((meta) => {
+        const description = meta.description ?? '-------------------';
+        return `${meta.id.replace('_', ':').replace(/(\d{2})(\d)-(\d)(\d{2})/, '$1-$2$3-$4')}\n${description}`;
+      })
+      .join('\n\n');
+
+    otherMetaList.forEach((meta) => {
+      meta.description =
+        (meta.description !== undefined ? meta.description + '\n\n' : '') +
+        `MERGED WITH ${firstMeta.filePath}`;
+    });
 
     this.write(this.metadata);
   }
