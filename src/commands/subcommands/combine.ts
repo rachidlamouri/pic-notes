@@ -629,21 +629,38 @@ export class Combine extends Command<CommandName.Combine> {
       const encodedFinalImage = encodeImage(finalImage);
 
       let newImageFilePath;
+      let filePathToBackupSingleton: [string] | [];
+      let filesPathsToRecycle: string[];
       if (isAppend) {
-        const [firstMeta] = metaList;
+        const [firstMeta, ...otherMeta] = metaList;
         assertIsNotUndefined(firstMeta);
-        const backupFilePath = PicturesManager.createTemporaryBackup(
-          firstMeta.filePath,
-        );
-        console.log(`  original image backup: ./${backupFilePath}`);
+        filePathToBackupSingleton = [
+          PicturesManager.createTemporaryBackup(firstMeta.filePath),
+        ];
+
         newImageFilePath = firstMeta.filePath;
         PicturesManager.overwritePicture(newImageFilePath, encodedFinalImage);
         this.metadataManager.merge(metaList);
+
+        filesPathsToRecycle = otherMeta
+          .filter((meta) => meta.tagMap.size === 0)
+          .map((meta) => meta.filePath);
       } else {
         newImageFilePath = PicturesManager.createPicture(encodedFinalImage);
+        filePathToBackupSingleton = [];
+        filesPathsToRecycle = metaList.map((meta) => meta.filePath);
       }
 
-      console.log(`  encoded final image: ${newImageFilePath}`);
+      const recycledFilePaths =
+        PicturesManager.recyclePictures(filesPathsToRecycle);
+
+      console.log(`  backed up images:`);
+      [...filePathToBackupSingleton, ...recycledFilePaths].forEach(
+        (filePath) => {
+          console.log(`    ./${filePath}`);
+        },
+      );
+      console.log(`  encoded final image: ./${newImageFilePath}`);
 
       if (isAppend) {
         console.log();

@@ -78,8 +78,9 @@ printTopLevel "Notes config file exists"
 mkdir -p backup
 printTopLevel "Backup directory exists"
 
-mkdir -p tmp
-printTopLevel "Temp directory exists"
+mkdir -p tmp/append
+mkdir -p tmp/recycle
+printTopLevel "Temp directories exist"
 
 if [[ ! -d "freeform" ]]; then
   mkdir -p "freeform"

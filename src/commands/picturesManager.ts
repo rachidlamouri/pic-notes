@@ -13,6 +13,10 @@ export class PicturesManager {
 
   static TMP_DIR = './tmp';
 
+  static TMP_APPEND = posix.join(PicturesManager.TMP_DIR, 'append');
+
+  static TMP_RECYCLE = posix.join(PicturesManager.TMP_DIR, 'recycle');
+
   init() {
     debug('init');
 
@@ -52,7 +56,7 @@ export class PicturesManager {
 
   static createTemporaryBackup(filePath: string): string {
     const fileName = posix.basename(filePath);
-    const outputFilePath = posix.join(this.TMP_DIR, fileName);
+    const outputFilePath = posix.join(this.TMP_APPEND, fileName);
 
     if (fs.existsSync(outputFilePath)) {
       throw new Error(`Backup destination already exists: ${outputFilePath}`);
@@ -60,6 +64,18 @@ export class PicturesManager {
 
     fs.copyFileSync(filePath, outputFilePath);
     return outputFilePath;
+  }
+
+  static recyclePictures(filePathList: string[]): string[] {
+    const backupFilePaths = filePathList.map((filePath) => {
+      const fileName = posix.basename(filePath);
+      const outputFilePath = posix.join(this.TMP_RECYCLE, fileName);
+
+      fs.renameSync(filePath, outputFilePath);
+      return outputFilePath;
+    });
+
+    return backupFilePaths;
   }
 
   read() {
