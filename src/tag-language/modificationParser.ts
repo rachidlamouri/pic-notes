@@ -15,6 +15,7 @@ import { AddValueOperationNode } from './nodes/modification-nodes/addValueOperat
 import { RemoveValueOperationNode } from './nodes/modification-nodes/removeValueOperationNode';
 import { AddDescriptionOperationNode } from './nodes/modification-nodes/addDescriptionOperationNode';
 import { RemoveDescriptionOperationNode } from './nodes/modification-nodes/removeDescriptionOperationNode';
+import { RenameTagOperationNode } from './nodes/modification-nodes/renameTagOperationNode';
 
 type ExpressionResultTuple = [GenericModificationOperationNode, unknown];
 
@@ -28,6 +29,7 @@ type ModificationLanguage = {
   hardSetValueOperation: HardSetValueOperationNode;
   addValueOperation: AddValueOperationNode;
   removeValueOperation: RemoveValueOperationNode;
+  renameTagOperation: RenameTagOperationNode;
   descriptionUnit:
     | AddDescriptionOperationNode
     | RemoveDescriptionOperationNode
@@ -111,6 +113,7 @@ const modificationLanguage = createLanguage<ModificationLanguage>(
     operation: (l) => {
       return P.alt<ModificationLanguage['operation']>(
         // -
+        l.renameTagOperation,
         l.removeValueOperation,
         l.addValueOperation,
         l.hardSetValueOperation,
@@ -132,6 +135,19 @@ const modificationLanguage = createLanguage<ModificationLanguage>(
       ).map((result) => {
         const tagName = result[1];
         return new RemoveTagOperationNode(tagName);
+      });
+    },
+    renameTagOperation: () => {
+      return P.seq(
+        tl.tagName,
+        P.optWhitespace,
+        P.string('>>'),
+        P.optWhitespace,
+        tl.tagName,
+      ).map((result) => {
+        const oldTagName = result[0];
+        const newTagName = result[4];
+        return new RenameTagOperationNode(oldTagName, newTagName);
       });
     },
     softSetValueOperation: () => {

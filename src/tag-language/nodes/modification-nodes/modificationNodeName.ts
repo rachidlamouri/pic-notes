@@ -9,6 +9,7 @@ export enum ModificationOperationNodeName {
   HardSetValueOperation = 'HardSetValueOperation',
   AddValueOperation = 'AddValueOperation',
   RemoveValueOperation = 'RemoveValueOperation',
+  RenameTagOperation = 'RenameTagOperation',
   AddDescriptionOperation = 'AddDescriptionOperation',
   RemoveDescriptionOperation = 'RemoveDescriptionOperation',
 }

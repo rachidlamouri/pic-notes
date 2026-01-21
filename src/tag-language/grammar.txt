@@ -18,6 +18,7 @@
  * MO  : Tag Modification Operation
  * MAT : Add Tag Operation
  * MRT : Remove Tag Operation
+ * MCT : Rename (Change) Tag Operation
  * MSSV: Soft Set Tag Value Operation
  * MHSV: Hard Set Tag Value Operation
  * MAV : Add Value Unit Operation
@@ -57,7 +58,7 @@
  * Ambiguous Grammar
  *
  * Search Operator Precedence: Parenthesis, intersection, (union, difference)
- * Search Operator Associativity Associativity: left for all operators
+ * Search Operator Associativity: left for all operators
  *
  * Search
  * SRCH -> SEXP | ε
@@ -72,9 +73,10 @@
  * Modification
  * MOD  -> MEXP MDU | \s
  * MEXP -> MO \s MEXP | MO
- * MO   -> MAT | MRT | MSSV | MHSV | MAV | MRV
+ * MO   -> MAT | MRT | MCT | MSSV | MHSV | MAV | MRV
  * MAT  -> TN
  * MRT  -> -TN
+ * MCT  -> TN >> TN
  * MSSV -> TN:TVU
  * MHSV -> T:=TVU
  * MAV  -> TN:+TVU
@@ -111,9 +113,10 @@
  * Modification
  * MOD  -> MEXP MDU | \s
  * MEXP -> MO \s MEXP | MO
- * MO   -> MAT | MRT | MSSV | MHSV | MAV | MRV
+ * MO   -> MAT | MRT | MCT | MSSV | MHSV | MAV | MRV
  * MAT  -> TN
  * MRT  -> -TN
+ * MCT  -> TN >> TN
  * MSSV -> TN:TVU
  * MHSV -> T:=TVU
  * MAV  -> TN:+TVU

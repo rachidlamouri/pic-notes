@@ -45,6 +45,10 @@ export class Tag {
     this.valueSet = new TagValueSet(valueList);
   }
 
+  rename(newName: TagName) {
+    this.name = newName;
+  }
+
   isEqual(tag: Tag) {
     return (
       this.valueCount === tag.valueCount &&

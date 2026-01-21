@@ -22,7 +22,8 @@ Use the [./freeform](./freeform/) directory to save any personal supplemental fi
 
 Modification and search queries both contain syntax of the form `<tag-name>:<value-unit>`. The syntax for a value unit is as follows:
 
-**note**: the angle brackets are placeholders, and the square brackets are literals
+> [!NOTE]
+> Angle brackets are placeholders (except for the >> operator), and square brackets are literals
 
 ```sh
 # No value
@@ -49,6 +50,15 @@ notes tag <id> "<tag-name>"
 notes tag <id> "-<tag-name>"
 ```
 
+### Rename Tag
+
+Renames a tag without losing its value list.
+
+```sh
+## note: the operator is ">>"
+notes tag <id> "<old-tag-name> >> <new-tag-name>"
+```
+
 ### Soft Set Value Unit
 
 Only overwrites the value if the current value list has zero or one values.
@@ -59,7 +69,7 @@ notes tag <id> "<tag-name>:<value-unit>"
 
 ### Hard Set Value Unit
 
-Always overwrites the value if the current value list has zero or one values.
+Always overwrites the value even if the current value list has more than one value.
 
 ```sh
 notes tag <id> "<tag-name>:=<value-unit>"

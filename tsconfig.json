@@ -7,7 +7,5 @@
   "compilerOptions": {
     "noUncheckedIndexedAccess": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }
