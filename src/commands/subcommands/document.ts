@@ -5,6 +5,7 @@ import { CommandName } from '../commandName';
 import { withExit } from '../withExit';
 import fs from 'fs';
 import { execSync } from 'child_process';
+import { ParseableType } from '../../parse-args/parseableType';
 
 type IndexEntry = {
   key: string;
@@ -14,10 +15,10 @@ type IndexEntry = {
 export class Document extends Command<CommandName.Document> {
   name = CommandName.Document as const;
   description =
-    'Opens a text editor to enable documenting primary or secondary index values';
-  examples = ['[<tagName>]'];
+    'Enables documenting the purpose of primary or secondary index tag names. Pass the --write flag to open an editor to modify the documentation. Otherwise it simply prints the current documentation.';
+  examples = ['[--write]', '[--write] [<secondary-index-tag-name>]'];
 
-  openEditor(entries: IndexEntry[]) {
+  formatEntries(entries: IndexEntry[]) {
     const column1Length = Math.max(...entries.map(({ key }) => key.length));
 
     const formatted = entries
@@ -25,6 +26,12 @@ export class Document extends Command<CommandName.Document> {
         return `${key.padEnd(column1Length, ' ')} | ${description}`;
       })
       .join('\n');
+
+    return formatted;
+  }
+
+  openEditor(entries: IndexEntry[]) {
+    const formatted = this.formatEntries(entries);
 
     const filename = 'DOCUMENT.txt';
     fs.writeFileSync(filename, formatted);
@@ -46,7 +53,7 @@ export class Document extends Command<CommandName.Document> {
     return descriptionByKey;
   }
 
-  documentPrimaryIndex() {
+  documentPrimaryIndex(isReadOnly: boolean) {
     const primaryIndexEntries = Object.entries(
       this.metadataManager.metadata.primaryIndex,
     )
@@ -58,12 +65,16 @@ export class Document extends Command<CommandName.Document> {
       })
       .toSorted((a, b) => a.key.localeCompare(b.key));
 
-    const descriptionByKey = this.openEditor(primaryIndexEntries);
+    if (isReadOnly) {
+      console.log(this.formatEntries(primaryIndexEntries));
+    } else {
+      const descriptionByKey = this.openEditor(primaryIndexEntries);
 
-    this.metadataManager.updatePrimaryIndexDescriptions(descriptionByKey);
+      this.metadataManager.updatePrimaryIndexDescriptions(descriptionByKey);
+    }
   }
 
-  documentSecondaryIndex(tagName: string) {
+  documentSecondaryIndex(tagName: string, isReadOnly: boolean) {
     if (!this.metadataManager.config.secondaryIndexes.has(tagName)) {
       withExit(
         1,
@@ -85,26 +96,45 @@ export class Document extends Command<CommandName.Document> {
       })
       .toSorted((a, b) => a.key.localeCompare(b.key));
 
-    const descriptionByKey = this.openEditor(secondaryIndexEntries);
+    if (isReadOnly) {
+      console.log(this.formatEntries(secondaryIndexEntries));
+    } else {
+      const descriptionByKey = this.openEditor(secondaryIndexEntries);
 
-    this.metadataManager.updateSecondaryIndexDescriptions(descriptionByKey);
+      this.metadataManager.updateSecondaryIndexDescriptions(descriptionByKey);
+    }
   }
 
   run(commandArgs: string[]): void {
     const {
       positionals: [tagName],
+      options: { write: isWriteEnabled = false },
     } = parseArgs({
       args: commandArgs,
       positionals: [],
-      options: [],
+      options: [
+        {
+          name: 'write',
+          type: ParseableType.Boolean,
+          isRequired: false,
+        },
+      ],
     });
 
+    const isReadOnly = !isWriteEnabled;
+
     if (tagName === undefined) {
-      this.documentPrimaryIndex();
+      this.documentPrimaryIndex(isReadOnly);
     } else {
-      this.documentSecondaryIndex(tagName);
+      this.documentSecondaryIndex(tagName, isReadOnly);
     }
 
-    withExit(0, console.log, 'Done');
+    if (isWriteEnabled) {
+      console.log('Done');
+    }
+
+    withExit(0, () => {
+      // no op
+    });
   }
 }
