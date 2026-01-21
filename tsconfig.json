@@ -5,6 +5,7 @@
   },
   "extends": "@tsconfig/node20",
   "compilerOptions": {
+    "target": "esnext",
     "noUncheckedIndexedAccess": true
   },
   "include": ["src"]

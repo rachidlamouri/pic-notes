@@ -15,6 +15,13 @@ import { SelectAllOperationNode } from './nodes/search-nodes/lookup-operations/s
 import { IntersectionOperationNode } from './nodes/search-nodes/set-operations/intersectionOperationNode';
 import { UnionOperationNode } from './nodes/search-nodes/set-operations/unionOperationNode';
 import { DifferenceOperationNode } from './nodes/search-nodes/set-operations/differenceOperationNode';
+import { FilterByDescriptionNode } from './nodes/search-nodes/filters/filterByDescriptionNode';
+import {
+  FilterNode,
+  GenericFilterNode,
+} from './nodes/search-nodes/filters/filterNode';
+
+type ComputableNode = GenericSearchOperationNode | GenericFilterNode;
 
 enum Operator {
   Intersection = '^',
@@ -22,7 +29,9 @@ enum Operator {
   Difference = '-',
 }
 
-type OperationChainEnd = [Operator, GenericSearchOperationNode];
+type OperationChainEnd =
+  | [Operator, GenericSearchOperationNode]
+  | [Operator.Difference, GenericFilterNode];
 
 type NestedAccumulatedOperation = [
   Operator,
@@ -66,14 +75,11 @@ function assertIsAccumulatedOperation(
   throw new Error('Expected an AccumulatedOperation, but received: ' + datum);
 }
 
-const operationConstructorByOperator: Record<
-  Operator,
-  Constructor<GenericSearchOperationNode>
-> = {
+const operationConstructorByOperator = {
   [Operator.Intersection]: IntersectionOperationNode,
   [Operator.Union]: UnionOperationNode,
   [Operator.Difference]: DifferenceOperationNode,
-};
+} satisfies Record<Operator, Constructor<GenericSearchOperationNode>>;
 
 const associateLeft = ([leftExpression, accumulatedOperation]: [
   GenericSearchOperationNode,
@@ -82,16 +88,26 @@ const associateLeft = ([leftExpression, accumulatedOperation]: [
   const operator = accumulatedOperation[0];
   const Operation = operationConstructorByOperator[operator];
 
-  const rightExpression: GenericSearchOperationNode = accumulatedOperation[1];
-
   let expression: GenericSearchOperationNode;
   if (isNestedAccumulatedOperation(accumulatedOperation)) {
+    const rightExpression = accumulatedOperation[1];
+
     const nextLeftExpression = new Operation(leftExpression, rightExpression);
     const nextAccumulatedOperation: unknown = accumulatedOperation[2];
     assertIsAccumulatedOperation(nextAccumulatedOperation);
 
     expression = associateLeft([nextLeftExpression, nextAccumulatedOperation]);
   } else {
+    const rightExpression = accumulatedOperation[1];
+
+    if (rightExpression instanceof FilterNode) {
+      if (Operation === DifferenceOperationNode) {
+        return new DifferenceOperationNode(leftExpression, rightExpression);
+      }
+
+      throw new Error('Filters can only be used with the difference operator');
+    }
+
     expression = new Operation(leftExpression, rightExpression);
   }
 
@@ -174,6 +190,25 @@ const searchLanguage = createLanguage<SearchLanguage>(parserDebugger, {
           subexpression2,
           subexpression1Prime,
         ] satisfies NestedAccumulatedOperation;
+      }),
+      P.seq(
+        P.optWhitespace,
+        P.string(Operator.Difference),
+        P.optWhitespace,
+        P.alt(
+          P.string('-#').map(() => false),
+          P.string('#').map(() => true),
+        ),
+      ).map((result) => {
+        const operator = result[1];
+        const hasDescription = result[3];
+
+        const chainEnd: OperationChainEnd = [
+          operator,
+          new FilterByDescriptionNode(hasDescription),
+        ];
+
+        return chainEnd;
       }),
       ul.ε,
     );

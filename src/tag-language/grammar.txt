@@ -10,6 +10,9 @@
  * SALV: Contains All Values Search Operation
  * SANV: Contains Any Value Search Operation
  * SHT : Has Tag Name Search Operation
+ * SF  : Filter
+ * SHD : Has a Description
+ * SNHD: Not Has a Description
  *
  * Modification Nonterminals
  * MOD : Tag Modification
@@ -62,13 +65,16 @@
  *
  * Search
  * SRCH -> SEXP | ε
- * SEXP -> (SEXP) | SEXP ^ SEXP | SEXP + SEXP | SEXP - SEXP | SO
+ * SEXP -> (SEXP) | SEXP ^ SEXP | SEXP + SEXP | SEXP - SF | SEXP - SEXP | SO
  * SO   -> SALL | SEXV | SALV | SANV | SHT
  * SALL -> *
  * SEXV -> TN:=TVU
  * SALV -> TN:^TVU
  * SANV -> TN:~TVU
  * SHT  -> TN
+ * SF   -> SHD | SNHD
+ * SHD  -> #
+ * SNHD -> !#
  *
  * Modification
  * MOD  -> MEXP MDU | \s
@@ -99,7 +105,7 @@
  *
  * Search
  * SRCH  -> SEXP1 | ε
- * SEXP1 -> SEXP1 [+-] SEXP2 | SEXP2
+ * SEXP1 -> SEXP1 - SF | SEXP1 [+-] SEXP2 | SEXP2
  * SEXP2 -> SEXP2 ^ SEXP3 | SEXP3
  * SEXP3 -> ( SEXP1 ) | SEXP4
  * SEXP4 -> SO
@@ -109,6 +115,9 @@
  * SALV  -> TN:^TVU
  * SANV  -> TN:~TVU
  * SHT   -> TN
+ * SF    -> SHD | SNHD
+ * SHD   -> #
+ * SNHD  -> !#
  *
  * Modification
  * MOD  -> MEXP MDU | \s
@@ -140,7 +149,7 @@
  * Search
  * SRCH  -> EXP1 | ε
  * EXP1  -> EXP2 EXP1'
- * EXP1' -> [+-] EXP2 EXP1' | ε
+ * EXP1' -> [+-] EXP2 EXP1' | - SF | ε
  * EXP2  -> EXP3 EXP2'
  * EXP2' -> ^ EXP3 EXP2' | ε
  * EXP3  -> ( EXP1 ) | EXP4

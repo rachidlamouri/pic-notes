@@ -3,12 +3,15 @@ import { GenericSearchOperationNode } from '../searchOperationNode';
 import { SetOperationNode } from './setOperationNode';
 import { IdSet, MetadataManager } from '../../../../commands/metadataManager';
 
-export class UnionOperationNode extends SetOperationNode<SetOperationNodeName.UnionOperation> {
+export class UnionOperationNode extends SetOperationNode<
+  SetOperationNodeName.UnionOperation,
+  GenericSearchOperationNode
+> {
   constructor(
-    public left: GenericSearchOperationNode,
-    public right: GenericSearchOperationNode,
+    left: GenericSearchOperationNode,
+    right: GenericSearchOperationNode,
   ) {
-    super(SetOperationNodeName.UnionOperation);
+    super(SetOperationNodeName.UnionOperation, left, right);
   }
 
   compute(metadataManager: MetadataManager): IdSet {

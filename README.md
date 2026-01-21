@@ -183,6 +183,21 @@ Returns the metadata from the first query that is not in the second query.
 notes search "<subquery-1> - <subquery-2>"
 ```
 
+### Has Description / Not Has Description
+
+Can only be used with the Difference operator to filter metadata that has (or does not have) a description.
+
+> [!NOTE]
+> Descriptions themselves are not searchable. Also I was going to use "!#" for "does not have description", but that is reserved for Shell History Expansion
+
+```sh
+# Don't return metadata with a description
+notes search "<required-subquery> - #"
+
+# Return metadata with a description
+notes search "<required-subquery> - -#"
+```
+
 ### Select All
 
 Returns all metadata.

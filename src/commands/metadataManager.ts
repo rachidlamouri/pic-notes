@@ -189,6 +189,10 @@ export class Meta implements MetaInput {
     this.tagMap.delete(tagName);
   }
 
+  get hasDescription(): boolean {
+    return this.description !== undefined;
+  }
+
   setDescription(description: string | undefined) {
     this.description = description;
   }
