@@ -678,15 +678,24 @@ export class MetadataManager {
       });
     });
 
+    const oldPrimaryIndex = this.metadata.primaryIndex;
     this.metadata.primaryIndex = {};
     metaTags.forEach(({ meta, tag }) => {
       const indexValue =
         this.metadata.primaryIndex[tag.name] ?? new IndexValue('', new IdSet());
 
       indexValue.ids.add(meta.id);
+
+      const description = oldPrimaryIndex[tag.name]?.description;
+      if (description !== undefined) {
+        indexValue.description = description;
+      }
+
+      oldPrimaryIndex[tag.name]?.description ?? undefined;
       this.metadata.primaryIndex[tag.name] = indexValue;
     });
 
+    const oldSecondaryIndex = this.metadata.secondaryIndex;
     this.metadata.secondaryIndex = {};
     metaTags
       .filter(({ tag }) => this.config.secondaryIndexes.has(tag.name))
@@ -705,6 +714,12 @@ export class MetadataManager {
           new IndexValue('', new IdSet());
 
         indexValue.ids.add(meta.id);
+
+        const description = oldSecondaryIndex[secondaryKey]?.description;
+        if (description !== undefined) {
+          indexValue.description = description;
+        }
+
         this.metadata.secondaryIndex[secondaryKey] = indexValue;
       });
 
