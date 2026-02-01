@@ -88,34 +88,6 @@ export class Tag {
       return Tag.buildSecondaryIndexKey(this.name, value);
     });
   }
-
-  serialize() {
-    let valuePart: string;
-    if (this.valueCount === 0) {
-      valuePart = '';
-    } else if (this.valueCount === 1) {
-      const value = this.getValueList()[0];
-      assertIsNotUndefined(value);
-      valuePart = `:${value}`;
-    } else {
-      valuePart = `:[${this.getValueList().toSorted().join(', ')}]`;
-    }
-
-    return `${this.name}${valuePart}`;
-  }
-
-  // get serialized() {
-  //   let valuePart: string;
-  //   if (this.valueList.length > 1) {
-  //     valuePart = `:[${this.valueList.join(',')}]`;
-  //   } else if (this.valueList[0] !== undefined) {
-  //     valuePart = `:${this.valueList[0]}`;
-  //   } else {
-  //     valuePart = '';
-  //   }
-
-  //   return `${this.name}${valuePart}`;
-  // }
 }
 
 /** @deprecated */

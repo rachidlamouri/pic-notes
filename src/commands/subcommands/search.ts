@@ -139,7 +139,7 @@ export class Search extends Command<CommandName.Search> {
     withExit(0, () => {
       console.log(`Found ${resultCount}; Showing ${limitedList.length}`);
       printDivider();
-      printMetaList(limitedList);
+      printMetaList(limitedList, this.metadataManager);
     });
   }
 }

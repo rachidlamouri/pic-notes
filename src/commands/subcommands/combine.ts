@@ -664,7 +664,7 @@ export class Combine extends Command<CommandName.Combine> {
 
       if (isAppend) {
         console.log();
-        printMetaList(metaList);
+        printMetaList(metaList, this.metadataManager);
       }
     };
 

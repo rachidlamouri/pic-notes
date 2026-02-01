@@ -32,6 +32,6 @@ export class List extends Command<CommandName.List> {
     const metaSublist = Object.values(
       this.metadataManager.metadata.metaById,
     ).slice(-count);
-    withExit(0, printMetaList, metaSublist);
+    withExit(0, printMetaList, metaSublist, this.metadataManager);
   }
 }

@@ -175,6 +175,7 @@ export class Tag extends Command<CommandName.Tag> {
       0,
       printMetaList,
       allIds.map((id) => this.metadataManager.getMetaById(id)),
+      this.metadataManager,
     );
   }
 }
