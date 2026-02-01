@@ -8,6 +8,7 @@ import { MetadataManager } from './metadataManager';
 import { PicturesManager } from './picturesManager';
 import { Timestamp } from './timestamp';
 import { withExit } from './withExit';
+import c from 'chalk';
 
 export type CommandInput = {
   metadataManager: MetadataManager;
@@ -49,7 +50,9 @@ export abstract class Command<TCommandName extends CommandName>
     const commandToPrint = this.replacement ?? this;
 
     if (!this.isDeprecated || this.replacement) {
-      console.log(commandToPrint.name + ': ' + commandToPrint.description);
+      console.log(
+        c.cyan(commandToPrint.name) + ': ' + commandToPrint.description,
+      );
 
       const examples = commandToPrint.examples.map(
         (example) => `  notes ${commandToPrint.name} ` + example,
